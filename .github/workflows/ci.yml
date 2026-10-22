@@ -35,10 +35,6 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
-    env:
-      # Build the tools with the toolchain go.mod names, not the older one
-      # their own go.mod would switch to.
-      GOTOOLCHAIN: local
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-go@v6
