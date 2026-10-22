@@ -1,0 +1,38 @@
+name: release
+
+# Pushing a tag such as v0.1.0 runs GoReleaser (.goreleaser.yaml), which
+# publishes a GitHub release with notes from the merged pull requests. The
+# tests run first, so a broken tag gets no release.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: version.go matches the tag
+        run: |
+          want="${GITHUB_REF_NAME#v}"
+          got=$(sed -n 's/^const Version = "\(.*\)"$/\1/p' version.go)
+          if [ "$got" != "$want" ]; then
+            echo "::error::version.go says $got but the tag is $GITHUB_REF_NAME"
+            exit 1
+          fi
+      - run: go test -race ./...
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          version: '~> v2'
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
