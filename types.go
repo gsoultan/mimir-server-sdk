@@ -78,6 +78,13 @@ type (
 	CreateWorkerResponse       = mimirv1.CreateWorkerResponse
 	GetUsageResponse           = mimirv1.GetUsageResponse
 	GetSettingsResponse        = mimirv1.GetSettingsResponse
+	Training                   = mimirv1.Training
+	UpdateTrainingRequest      = mimirv1.UpdateTrainingRequest
+	CloudGpu                   = mimirv1.CloudGpu
+	CloudGpuProvider           = mimirv1.CloudGpuProvider
+	CloudGpuChoice             = mimirv1.CloudGpuChoice
+	GetCloudGpuResponse        = mimirv1.GetCloudGpuResponse
+	UpdateCloudGpuRequest      = mimirv1.UpdateCloudGpuRequest
 )
 
 // Role values.

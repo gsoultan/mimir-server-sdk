@@ -17,6 +17,7 @@ import (
 type ModelService struct {
 	raw     mimirv1connect.ModelServiceClient
 	predict mimirv1connect.PredictServiceClient
+	uploads *uploader
 }
 
 // List returns every model the caller may see, newest first.
@@ -37,8 +38,9 @@ func (s *ModelService) Architectures(ctx context.Context) ([]*Architecture, erro
 	return res.GetArchitectures(), err
 }
 
-// Create stores a model from its weights, held in memory. For a file on
-// disk, UploadFile is simpler.
+// Create stores a model from its weights held in memory (Weights), or
+// from a file sent beforehand (Upload). For a file on disk, UploadFile is
+// simpler.
 func (s *ModelService) Create(ctx context.Context, req *CreateModelRequest) (*Model, error) {
 	res, err := call(ctx, mimirv1connect.ModelServiceCreateModelProcedure, s.raw.CreateModel, req)
 	return res.GetModel(), err
@@ -46,13 +48,31 @@ func (s *ModelService) Create(ctx context.Context, req *CreateModelRequest) (*Mo
 
 // Upload stores a model whose weights it reads from r: a Mimir Model
 // (.mim) file, or an ONNX or GGUF file for the "mim" and language-model
-// architectures, which the server converts.
+// architectures, which the server converts. The file is streamed to the
+// server as it is read, so it can be larger than memory; the server's
+// -max-model-mb caps it. The streaming is bounded by ctx, not by
+// WithTimeout, so a large file isn't cut short.
 func (s *ModelService) Upload(ctx context.Context, name, architecture string, r io.Reader) (*Model, error) {
-	weights, err := io.ReadAll(r)
+	id, err := s.uploads.send(ctx, r, sizeOf(r))
 	if err != nil {
-		return nil, fmt.Errorf("mimirsdk: read the model's weights: %w", err)
+		return nil, err
 	}
-	return s.Create(ctx, &mimirv1.CreateModelRequest{Name: name, Architecture: architecture, Weights: weights})
+	return s.Create(ctx, &mimirv1.CreateModelRequest{Name: name, Architecture: architecture, Upload: id})
+}
+
+// sizeOf is r's length when it can tell without reading it, else -1.
+func sizeOf(r io.Reader) int64 {
+	switch v := r.(type) {
+	case interface{ Len() int }:
+		return int64(v.Len())
+	case *os.File:
+		if fi, err := v.Stat(); err == nil && fi.Mode().IsRegular() {
+			if off, err := v.Seek(0, io.SeekCurrent); err == nil {
+				return fi.Size() - off
+			}
+		}
+	}
+	return -1
 }
 
 // UploadFile is Upload from a file. An empty name uses the file's name
