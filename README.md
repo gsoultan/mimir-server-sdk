@@ -58,16 +58,16 @@ the key in `$MIMIR_API_KEY`.
 
 | Service | What it does |
 | --- | --- |
-| `client.Models` | list, get, upload (`.mim`, ONNX, GGUF), update, delete; `Predict`, `PredictFields`, `PredictPhoto`; `Generate`, `GenerateStream`, `Chat`, `ChatText` for language models |
+| `client.Models` | list, get, upload (`.mim`, ONNX, GGUF, streamed so files can be larger than memory), update, delete; `Predict`, `PredictFields`, `PredictPhoto`; `Generate`, `GenerateStream`, `Chat`, `ChatText` for language models |
 | `client.Datasets` | `UploadCSV`, `UploadPhotos`, `Create` from a database query, a bucket or a template; get, refresh, check, delete |
-| `client.Training` | `Start`, `Wait` (with progress), get, list, cancel, resume, delete, `KeepLearning` |
+| `client.Training` | `Start`, `Wait` (with progress), get, list, cancel, resume, delete, `KeepLearning` (on an interval, optionally waiting for new rows) |
 | `client.Webhooks` | create, update, delete, `SendTest`, `Deliveries` (paged), `Redeliver` |
 | `client.APIKeys` | list, create, revoke the caller's keys |
 | `client.Auth` | `WhoAmI`, `SetupState`, `SignIn` and `VerifySecondFactor` for a password sign-in |
 | `client.Users`, `client.Teams` | manage people and teams (admins and owners) |
 | `client.Audit` | `All` walks the audit log page by page |
-| `client.Workers` | list, get, choices, create, delete |
-| `client.Settings`, `client.Templates` | usage, limits and settings; the template gallery and its example data |
+| `client.Workers` | list, get, choices, create, delete, `SetTasks` (train, serve or both), rented cloud GPU settings |
+| `client.Settings`, `client.Templates` | usage, limits, where training runs and other settings; the template gallery and its example data |
 | `webhook` package | check `Mimir-Signature` and decode events on the receiving end |
 
 Anything else the server offers is on `client.Raw()`: the generated Connect
@@ -223,7 +223,7 @@ releases. Each release names the mimir-server release it is built against:
 
 | SDK | mimir-server |
 | --- | --- |
-| v0.1.x | v0.1.1 and later 0.1 releases |
+| v0.1.x | v0.1.2 and later 0.1 releases |
 
 ## Development
 
