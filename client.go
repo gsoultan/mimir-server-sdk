@@ -70,8 +70,9 @@ func New(baseURL string, opts ...Option) (*Client, error) {
 		return nil, errors.New("mimirsdk: the API key has spaces or line breaks in it")
 	}
 
+	ic := &interceptor{cfg: cfg}
 	copts := append([]connect.ClientOption{
-		connect.WithInterceptors(&interceptor{cfg: cfg}),
+		connect.WithInterceptors(ic),
 	}, cfg.connectOpts...)
 	h := cfg.httpClient
 	raw := &RawClients{
@@ -97,7 +98,7 @@ func New(baseURL string, opts ...Option) (*Client, error) {
 		Users:     &UserService{raw: raw.Users},
 		Teams:     &TeamService{raw: raw.Teams},
 		Audit:     &AuditService{raw: raw.Audit},
-		Models:    &ModelService{raw: raw.Models, predict: raw.Predict},
+		Models:    &ModelService{raw: raw.Models, predict: raw.Predict, uploads: &uploader{http: h, url: base + uploadPath, ic: ic}},
 		Datasets:  &DatasetService{raw: raw.Datasets},
 		Training:  &TrainingService{raw: raw.Training},
 		Webhooks:  &WebhookService{raw: raw.Webhooks},

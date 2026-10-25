@@ -4,8 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -40,6 +43,7 @@ type fake struct {
 	chat        func(req *mimirv1.ChatRequest, send func(*mimirv1.ChatResponse) error) error
 	audit       func(req *mimirv1.ListAuditEventsRequest) (*mimirv1.ListAuditEventsResponse, error)
 	getJob      func(n int) (*mimirv1.GetJobResponse, error)
+	upload      http.Handler
 
 	calls atomic.Int32
 }
@@ -126,6 +130,9 @@ func start(t *testing.T, f *fake, opts ...mimirsdk.Option) *mimirsdk.Client {
 	mux.Handle(mimirv1connect.NewAuditServiceHandler(f))
 	mux.Handle(mimirv1connect.NewTrainingServiceHandler(f))
 	mux.Handle(mimirv1connect.NewApiKeyServiceHandler(f))
+	if f.upload != nil {
+		mux.Handle("POST /api/uploads", f.upload)
+	}
 	srv := httptest.NewServer(mux)
 	t.Cleanup(srv.Close)
 	opts = append([]mimirsdk.Option{
@@ -520,5 +527,62 @@ func TestUnimplemented(t *testing.T) {
 	_, err := c.APIKeys.List(t.Context())
 	if !errors.Is(err, mimirsdk.ErrUnimplemented) {
 		t.Fatalf("err = %v", err)
+	}
+}
+
+func TestUploadStreamsTheFile(t *testing.T) {
+	weights := strings.Repeat("w", 3<<20)
+	f := &fake{}
+	f.upload = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		f.record(r.Header)
+		b, _ := io.ReadAll(r.Body)
+		if string(b) != weights || r.ContentLength != int64(len(weights)) {
+			http.Error(w, "wrong body", http.StatusBadRequest)
+			return
+		}
+		fmt.Fprintf(w, `{"upload":"up1","size":%d}`, len(b))
+	})
+	f.createModel = func(_ int, req *mimirv1.CreateModelRequest) (*mimirv1.CreateModelResponse, error) {
+		if req.GetUpload() != "up1" || len(req.GetWeights()) != 0 {
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("upload %q, %d bytes of weights", req.GetUpload(), len(req.GetWeights())))
+		}
+		return &mimirv1.CreateModelResponse{Model: &mimirv1.Model{Id: "m1", Name: req.GetName()}}, nil
+	}
+	c := start(t, f)
+
+	path := filepath.Join(t.TempDir(), "digits.mim")
+	if err := os.WriteFile(path, []byte(weights), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	m, err := c.Models.UploadFile(t.Context(), path, "", "mim")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.GetName() != "digits" {
+		t.Errorf("model = %v", m)
+	}
+	f.mu.Lock()
+	h := f.headers[0]
+	f.mu.Unlock()
+	if got := h.Get("Authorization"); got != "Bearer "+testKey {
+		t.Errorf("upload Authorization = %q", got)
+	}
+}
+
+func TestUploadError(t *testing.T) {
+	f := &fake{upload: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusRequestEntityTooLarge)
+		fmt.Fprint(w, `{"code":"resource_exhausted","message":"This file is larger than the 512 MB this server takes."}`)
+	})}
+	c := start(t, f)
+
+	_, err := c.Models.Upload(t.Context(), "big", "mim", strings.NewReader("x"))
+	var apiErr *mimirsdk.Error
+	if !errors.As(err, &apiErr) || !errors.Is(err, mimirsdk.ErrResourceExhausted) {
+		t.Fatalf("err = %v", err)
+	}
+	if apiErr.Message != "This file is larger than the 512 MB this server takes." {
+		t.Errorf("message = %q", apiErr.Message)
 	}
 }
