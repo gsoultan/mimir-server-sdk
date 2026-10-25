@@ -114,9 +114,16 @@ func (s *TrainingService) Delete(ctx context.Context, id string) error {
 }
 
 // KeepLearning makes a run learn again from fresh examples every interval;
-// 0 stops it. The interval is rounded down to whole seconds.
-func (s *TrainingService) KeepLearning(ctx context.Context, id string, every time.Duration) (*Job, error) {
-	res, err := call(ctx, mimirv1connect.TrainingServiceSetRepeatProcedure, s.raw.SetRepeat, &mimirv1.SetRepeatRequest{Id: id, RepeatSeconds: int64(every / time.Second)})
+// 0 stops it. The interval is rounded down to whole seconds. minNewRows
+// above 0 makes each pass wait until the source has that many new rows,
+// looking again every interval until it has; 0 starts a pass every
+// interval.
+func (s *TrainingService) KeepLearning(ctx context.Context, id string, every time.Duration, minNewRows int64) (*Job, error) {
+	res, err := call(ctx, mimirv1connect.TrainingServiceSetRepeatProcedure, s.raw.SetRepeat, &mimirv1.SetRepeatRequest{
+		Id:            id,
+		RepeatSeconds: int64(every / time.Second),
+		MinNewRows:    minNewRows,
+	})
 	return res.GetJob(), err
 }
 

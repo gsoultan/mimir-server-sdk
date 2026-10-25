@@ -104,6 +104,42 @@ func (s *WorkerService) Create(ctx context.Context, name string) (*CreateWorkerR
 	return call(ctx, mimirv1connect.WorkerServiceCreateWorkerProcedure, s.raw.CreateWorker, &mimirv1.CreateWorkerRequest{Name: name})
 }
 
+// What a worker may be told to take, for SetTasks.
+const (
+	WorkerTasksAll   = "all"   // training runs and predictions
+	WorkerTasksTrain = "train" // training runs only
+	WorkerTasksServe = "serve" // predictions only
+)
+
+// SetTasks tells a worker what to take: WorkerTasksAll, WorkerTasksTrain
+// or WorkerTasksServe, or "" to leave it to the worker's own -tasks flag.
+// It applies at once to a connected worker.
+func (s *WorkerService) SetTasks(ctx context.Context, id, tasks string) (*Worker, error) {
+	res, err := call(ctx, mimirv1connect.WorkerServiceSetWorkerTasksProcedure, s.raw.SetWorkerTasks, &mimirv1.SetWorkerTasksRequest{Id: id, Tasks: tasks})
+	return res.GetWorker(), err
+}
+
+// CloudGPU says how training runs rent a GPU when they wait, whether one
+// is running now, and which providers and GPUs can be picked.
+func (s *WorkerService) CloudGPU(ctx context.Context) (*GetCloudGpuResponse, error) {
+	return call(ctx, mimirv1connect.WorkerServiceGetCloudGpuProcedure, s.raw.GetCloudGpu, nil)
+}
+
+// UpdateCloudGPU sets up renting a GPU for waiting training runs, changes
+// it, or turns it off. Turning it on the first time adds a worker for it,
+// which only trains.
+func (s *WorkerService) UpdateCloudGPU(ctx context.Context, req *UpdateCloudGpuRequest) (*CloudGpu, error) {
+	res, err := call(ctx, mimirv1connect.WorkerServiceUpdateCloudGpuProcedure, s.raw.UpdateCloudGpu, req)
+	return res.GetCloudGpu(), err
+}
+
+// StopCloudGPU stops the rented GPU now. Runs on it go back in the queue
+// and resume from their checkpoints.
+func (s *WorkerService) StopCloudGPU(ctx context.Context) (*CloudGpu, error) {
+	res, err := call(ctx, mimirv1connect.WorkerServiceStopCloudGpuProcedure, s.raw.StopCloudGpu, nil)
+	return res.GetCloudGpu(), err
+}
+
 // Delete removes a worker.
 func (s *WorkerService) Delete(ctx context.Context, id string) error {
 	_, err := call(ctx, mimirv1connect.WorkerServiceDeleteWorkerProcedure, s.raw.DeleteWorker, &mimirv1.DeleteWorkerRequest{Id: id})
@@ -116,7 +152,7 @@ type SettingsService struct {
 	raw mimirv1connect.SettingsServiceClient
 }
 
-// Get returns the alert, retention, security and limit settings.
+// Get returns the alert, retention, security, limit and training settings.
 func (s *SettingsService) Get(ctx context.Context) (*GetSettingsResponse, error) {
 	return call(ctx, mimirv1connect.SettingsServiceGetSettingsProcedure, s.raw.GetSettings, nil)
 }
@@ -131,6 +167,14 @@ func (s *SettingsService) Usage(ctx context.Context, month string) (*GetUsageRes
 func (s *SettingsService) UpdateLimits(ctx context.Context, limits *Limits) (*Limits, error) {
 	res, err := call(ctx, mimirv1connect.SettingsServiceUpdateLimitsProcedure, s.raw.UpdateLimits, &mimirv1.UpdateLimitsRequest{Limits: limits})
 	return res.GetLimits(), err
+}
+
+// UpdateTraining says whether a standalone console trains runs in its own
+// process when no worker takes them, and, when GroupWorkers is set, on how
+// many workers one run may train together.
+func (s *SettingsService) UpdateTraining(ctx context.Context, req *UpdateTrainingRequest) (*Training, error) {
+	res, err := call(ctx, mimirv1connect.SettingsServiceUpdateTrainingProcedure, s.raw.UpdateTraining, req)
+	return res.GetTraining(), err
 }
 
 // TemplateService lists ready-made starting points for common questions.
