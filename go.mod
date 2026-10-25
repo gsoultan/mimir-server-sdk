@@ -6,7 +6,7 @@ toolchain go1.27.3
 
 require (
 	connectrpc.com/connect v1.21.1
-	github.com/gsoultan/mimir-server v0.0.0-20261022101132-d3210b075da5
+	github.com/gsoultan/mimir-server v0.0.0-20261025060600-0d17038cb192
 )
 
 require google.golang.org/protobuf v1.36.12 // indirect
