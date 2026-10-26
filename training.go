@@ -113,6 +113,12 @@ func (s *TrainingService) Delete(ctx context.Context, id string) error {
 	return err
 }
 
+// Compare returns two to six runs side by side, with every pass of each,
+// what their settings differ in, and the id of the best of them.
+func (s *TrainingService) Compare(ctx context.Context, ids ...string) (*CompareJobsResponse, error) {
+	return call(ctx, mimirv1connect.TrainingServiceCompareJobsProcedure, s.raw.CompareJobs, &mimirv1.CompareJobsRequest{Ids: ids})
+}
+
 // KeepLearning makes a run learn again from fresh examples every interval;
 // 0 stops it. The interval is rounded down to whole seconds. minNewRows
 // above 0 makes each pass wait until the source has that many new rows,
