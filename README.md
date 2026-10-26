@@ -60,7 +60,8 @@ the key in `$MIMIR_API_KEY`.
 | --- | --- |
 | `client.Models` | list, get, upload (`.mim`, ONNX, GGUF, streamed so files can be larger than memory), update, delete; `Predict`, `PredictFields`, `PredictPhoto`; `Generate`, `GenerateStream`, `Chat`, `ChatText` for language models |
 | `client.Datasets` | `UploadCSV`, `UploadPhotos`, `Create` from a database query, a bucket or a template; get, refresh, check, delete |
-| `client.Training` | `Start`, `Wait` (with progress), get, list, cancel, resume, delete, `KeepLearning` (on an interval, optionally waiting for new rows) |
+| `client.Training` | `Start`, `Wait` (with progress), get, list, cancel, resume, delete, `Compare` (runs side by side), `KeepLearning` (on an interval, optionally waiting for new rows) |
+| `client.Benchmarks` | `Freeze` a test from a dataset, `Create` from test rows of your own, `Score` models, `WaitForScores`, `Leader`, get the leaderboard, list, delete |
 | `client.Webhooks` | create, update, delete, `SendTest`, `Deliveries` (paged), `Redeliver` |
 | `client.APIKeys` | list, create, revoke the caller's keys |
 | `client.Auth` | `WhoAmI`, `SetupState`, `SignIn` and `VerifySecondFactor` for a password sign-in |
@@ -113,7 +114,32 @@ job, err = client.Training.Wait(ctx, job.GetId(), mimirsdk.WaitOptions{
 })
 ```
 
-`Wait` returns a `*mimirsdk.JobError` when the run fails or is cancelled.
+`Wait` returns a `*mimirsdk.JobError` when the run fails or is cancelled. A
+finished run carries its full report: `job.GetReport()` has the share of
+right answers, the per-label scores and the confusion table, or the average
+miss and R² for a number model.
+
+## Benchmarks
+
+An accuracy from a run says how a model did on the examples that run kept
+aside, which is a different test for every run. A benchmark is one fixed
+test every model takes the same way. Its rows are frozen from a dataset and
+left out of training on it, so no model learns the answers to its own test.
+
+```go
+test, err := client.Benchmarks.Freeze(ctx, "churn test", datasetID, 0.2)
+_, err = client.Benchmarks.Score(ctx, test.GetId(), modelA, modelB)
+scores, err := client.Benchmarks.WaitForScores(ctx, test.GetId(), mimirsdk.ScoreWaitOptions{})
+for _, s := range scores {
+	fmt.Println(s.GetRank(), s.GetModelName(), s.GetHeadline())
+}
+```
+
+The leaderboard comes back best first, by the share of right answers, by
+the balanced score when one answer is rare, or by the average miss for a
+number model, where less is better. `Benchmark.GetMetric()` says which, and
+`GetLowerIsBetter()` which way round. A model that finishes training on the
+benchmark's dataset is scored on its own.
 
 ## Errors
 

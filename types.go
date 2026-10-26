@@ -37,6 +37,13 @@ type (
 	Layer                      = mimirv1.Layer
 	EpochResult                = mimirv1.EpochResult
 	Job                        = mimirv1.Job
+	RunReport                  = mimirv1.RunReport
+	ClassScore                 = mimirv1.ClassScore
+	ConfusionRow               = mimirv1.ConfusionRow
+	GuessPoint                 = mimirv1.GuessPoint
+	Benchmark                  = mimirv1.Benchmark
+	BenchmarkScore             = mimirv1.BenchmarkScore
+	Candidate                  = mimirv1.Candidate
 	Webhook                    = mimirv1.Webhook
 	DeliveryStatus             = mimirv1.DeliveryStatus
 	Delivery                   = mimirv1.Delivery
@@ -54,6 +61,9 @@ type (
 	ChatRequest                = mimirv1.ChatRequest
 	ChatResponse               = mimirv1.ChatResponse
 	GetDeviceModelResponse     = mimirv1.GetDeviceModelResponse
+	CompareJobsResponse        = mimirv1.CompareJobsResponse
+	CreateBenchmarkRequest     = mimirv1.CreateBenchmarkRequest
+	GetBenchmarkResponse       = mimirv1.GetBenchmarkResponse
 	CreateDatasetRequest       = mimirv1.CreateDatasetRequest
 	CreateDatasetResponse      = mimirv1.CreateDatasetResponse
 	GetDatasetResponse         = mimirv1.GetDatasetResponse

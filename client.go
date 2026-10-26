@@ -23,36 +23,38 @@ type Client struct {
 	baseURL string
 	raw     *RawClients
 
-	Auth      *AuthService
-	APIKeys   *APIKeyService
-	Users     *UserService
-	Teams     *TeamService
-	Audit     *AuditService
-	Models    *ModelService
-	Datasets  *DatasetService
-	Training  *TrainingService
-	Webhooks  *WebhookService
-	Workers   *WorkerService
-	Settings  *SettingsService
-	Templates *TemplateService
+	Auth       *AuthService
+	APIKeys    *APIKeyService
+	Users      *UserService
+	Teams      *TeamService
+	Audit      *AuditService
+	Models     *ModelService
+	Datasets   *DatasetService
+	Training   *TrainingService
+	Webhooks   *WebhookService
+	Workers    *WorkerService
+	Settings   *SettingsService
+	Templates  *TemplateService
+	Benchmarks *BenchmarkService
 }
 
 // RawClients are the generated Connect clients for every service. Use them
 // for calls the services on Client don't wrap.
 type RawClients struct {
-	Auth      mimirv1connect.AuthServiceClient
-	Users     mimirv1connect.UserServiceClient
-	APIKeys   mimirv1connect.ApiKeyServiceClient
-	Audit     mimirv1connect.AuditServiceClient
-	Teams     mimirv1connect.TeamServiceClient
-	Models    mimirv1connect.ModelServiceClient
-	Predict   mimirv1connect.PredictServiceClient
-	Datasets  mimirv1connect.DatasetServiceClient
-	Training  mimirv1connect.TrainingServiceClient
-	Webhooks  mimirv1connect.WebhookServiceClient
-	Workers   mimirv1connect.WorkerServiceClient
-	Settings  mimirv1connect.SettingsServiceClient
-	Templates mimirv1connect.TemplateServiceClient
+	Auth       mimirv1connect.AuthServiceClient
+	Users      mimirv1connect.UserServiceClient
+	APIKeys    mimirv1connect.ApiKeyServiceClient
+	Audit      mimirv1connect.AuditServiceClient
+	Teams      mimirv1connect.TeamServiceClient
+	Models     mimirv1connect.ModelServiceClient
+	Predict    mimirv1connect.PredictServiceClient
+	Datasets   mimirv1connect.DatasetServiceClient
+	Training   mimirv1connect.TrainingServiceClient
+	Webhooks   mimirv1connect.WebhookServiceClient
+	Workers    mimirv1connect.WorkerServiceClient
+	Settings   mimirv1connect.SettingsServiceClient
+	Templates  mimirv1connect.TemplateServiceClient
+	Benchmarks mimirv1connect.BenchmarkServiceClient
 }
 
 // New returns a client for the server at baseURL, such as
@@ -76,35 +78,37 @@ func New(baseURL string, opts ...Option) (*Client, error) {
 	}, cfg.connectOpts...)
 	h := cfg.httpClient
 	raw := &RawClients{
-		Auth:      mimirv1connect.NewAuthServiceClient(h, base, copts...),
-		Users:     mimirv1connect.NewUserServiceClient(h, base, copts...),
-		APIKeys:   mimirv1connect.NewApiKeyServiceClient(h, base, copts...),
-		Audit:     mimirv1connect.NewAuditServiceClient(h, base, copts...),
-		Teams:     mimirv1connect.NewTeamServiceClient(h, base, copts...),
-		Models:    mimirv1connect.NewModelServiceClient(h, base, copts...),
-		Predict:   mimirv1connect.NewPredictServiceClient(h, base, copts...),
-		Datasets:  mimirv1connect.NewDatasetServiceClient(h, base, copts...),
-		Training:  mimirv1connect.NewTrainingServiceClient(h, base, copts...),
-		Webhooks:  mimirv1connect.NewWebhookServiceClient(h, base, copts...),
-		Workers:   mimirv1connect.NewWorkerServiceClient(h, base, copts...),
-		Settings:  mimirv1connect.NewSettingsServiceClient(h, base, copts...),
-		Templates: mimirv1connect.NewTemplateServiceClient(h, base, copts...),
+		Auth:       mimirv1connect.NewAuthServiceClient(h, base, copts...),
+		Users:      mimirv1connect.NewUserServiceClient(h, base, copts...),
+		APIKeys:    mimirv1connect.NewApiKeyServiceClient(h, base, copts...),
+		Audit:      mimirv1connect.NewAuditServiceClient(h, base, copts...),
+		Teams:      mimirv1connect.NewTeamServiceClient(h, base, copts...),
+		Models:     mimirv1connect.NewModelServiceClient(h, base, copts...),
+		Predict:    mimirv1connect.NewPredictServiceClient(h, base, copts...),
+		Datasets:   mimirv1connect.NewDatasetServiceClient(h, base, copts...),
+		Training:   mimirv1connect.NewTrainingServiceClient(h, base, copts...),
+		Webhooks:   mimirv1connect.NewWebhookServiceClient(h, base, copts...),
+		Workers:    mimirv1connect.NewWorkerServiceClient(h, base, copts...),
+		Settings:   mimirv1connect.NewSettingsServiceClient(h, base, copts...),
+		Templates:  mimirv1connect.NewTemplateServiceClient(h, base, copts...),
+		Benchmarks: mimirv1connect.NewBenchmarkServiceClient(h, base, copts...),
 	}
 	return &Client{
-		baseURL:   base,
-		raw:       raw,
-		Auth:      &AuthService{raw: raw.Auth},
-		APIKeys:   &APIKeyService{raw: raw.APIKeys},
-		Users:     &UserService{raw: raw.Users},
-		Teams:     &TeamService{raw: raw.Teams},
-		Audit:     &AuditService{raw: raw.Audit},
-		Models:    &ModelService{raw: raw.Models, predict: raw.Predict, uploads: &uploader{http: h, url: base + uploadPath, ic: ic}},
-		Datasets:  &DatasetService{raw: raw.Datasets},
-		Training:  &TrainingService{raw: raw.Training},
-		Webhooks:  &WebhookService{raw: raw.Webhooks},
-		Workers:   &WorkerService{raw: raw.Workers},
-		Settings:  &SettingsService{raw: raw.Settings},
-		Templates: &TemplateService{raw: raw.Templates},
+		baseURL:    base,
+		raw:        raw,
+		Auth:       &AuthService{raw: raw.Auth},
+		APIKeys:    &APIKeyService{raw: raw.APIKeys},
+		Users:      &UserService{raw: raw.Users},
+		Teams:      &TeamService{raw: raw.Teams},
+		Audit:      &AuditService{raw: raw.Audit},
+		Models:     &ModelService{raw: raw.Models, predict: raw.Predict, uploads: &uploader{http: h, url: base + uploadPath, ic: ic}},
+		Datasets:   &DatasetService{raw: raw.Datasets},
+		Training:   &TrainingService{raw: raw.Training},
+		Webhooks:   &WebhookService{raw: raw.Webhooks},
+		Workers:    &WorkerService{raw: raw.Workers},
+		Settings:   &SettingsService{raw: raw.Settings},
+		Templates:  &TemplateService{raw: raw.Templates},
+		Benchmarks: &BenchmarkService{raw: raw.Benchmarks},
 	}, nil
 }
 
