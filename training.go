@@ -53,6 +53,37 @@ func (s *DatasetService) UploadPhotos(ctx context.Context, name string, r io.Rea
 	return s.Create(ctx, &mimirv1.CreateDatasetRequest{Name: name, Kind: DatasetKindPhotos, Archive: zip})
 }
 
+// UploadSounds stores a ZIP of WAV sounds read from r, with one folder per
+// answer.
+func (s *DatasetService) UploadSounds(ctx context.Context, name string, r io.Reader) (*CreateDatasetResponse, error) {
+	zip, err := io.ReadAll(r)
+	if err != nil {
+		return nil, fmt.Errorf("mimirsdk: read the ZIP: %w", err)
+	}
+	return s.Create(ctx, &mimirv1.CreateDatasetRequest{Name: name, Kind: DatasetKindSounds, Archive: zip})
+}
+
+// UploadBoxes stores a ZIP read from r of photos and a boxes.csv saying
+// where the things in them are: one row per thing, with the columns photo,
+// what, left, top, width and height (or right and bottom), in pixels.
+func (s *DatasetService) UploadBoxes(ctx context.Context, name string, r io.Reader) (*CreateDatasetResponse, error) {
+	zip, err := io.ReadAll(r)
+	if err != nil {
+		return nil, fmt.Errorf("mimirsdk: read the ZIP: %w", err)
+	}
+	return s.Create(ctx, &mimirv1.CreateDatasetRequest{Name: name, Kind: DatasetKindBoxes, Archive: zip})
+}
+
+// UploadText stores writing read from r for a language model to learn
+// from: plain text, or JSON Lines of chats, prompts and completions.
+func (s *DatasetService) UploadText(ctx context.Context, name string, r io.Reader) (*CreateDatasetResponse, error) {
+	text, err := io.ReadAll(r)
+	if err != nil {
+		return nil, fmt.Errorf("mimirsdk: read the text: %w", err)
+	}
+	return s.Create(ctx, &mimirv1.CreateDatasetRequest{Name: name, Kind: DatasetKindText, Text: text})
+}
+
 // Refresh runs a database dataset's query again and replaces its rows.
 func (s *DatasetService) Refresh(ctx context.Context, id string) (*Dataset, error) {
 	res, err := call(ctx, mimirv1connect.DatasetServiceRefreshDatasetProcedure, s.raw.RefreshDataset, &mimirv1.RefreshDatasetRequest{Id: id})

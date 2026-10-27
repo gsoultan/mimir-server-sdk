@@ -59,7 +59,7 @@ the key in `$MIMIR_API_KEY`.
 | Service | What it does |
 | --- | --- |
 | `client.Models` | list, get, upload (`.mim`, ONNX, GGUF, streamed so files can be larger than memory), update, delete; `Predict`, `PredictFields`, `PredictPhoto`; `Generate`, `GenerateStream`, `Chat`, `ChatText` for language models |
-| `client.Datasets` | `UploadCSV`, `UploadPhotos`, `Create` from a database query, a bucket or a template; get, refresh, check, delete |
+| `client.Datasets` | `UploadCSV`, `UploadPhotos`, `UploadSounds`, `UploadBoxes`, `UploadText`, `Create` from a database query, a bucket or a template; get, refresh, check, delete |
 | `client.Training` | `Start`, `Wait` (with progress), get, list, cancel, resume, delete, `KeepLearning` (on an interval, optionally waiting for new rows) |
 | `client.Webhooks` | create, update, delete, `SendTest`, `Deliveries` (paged), `Redeliver` |
 | `client.APIKeys` | list, create, revoke the caller's keys |

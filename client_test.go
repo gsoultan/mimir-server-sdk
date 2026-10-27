@@ -32,6 +32,7 @@ type fake struct {
 	mimirv1connect.UnimplementedAuditServiceHandler
 	mimirv1connect.UnimplementedTrainingServiceHandler
 	mimirv1connect.UnimplementedApiKeyServiceHandler
+	mimirv1connect.UnimplementedDatasetServiceHandler
 
 	mu      sync.Mutex
 	headers []http.Header
@@ -43,6 +44,7 @@ type fake struct {
 	chat        func(req *mimirv1.ChatRequest, send func(*mimirv1.ChatResponse) error) error
 	audit       func(req *mimirv1.ListAuditEventsRequest) (*mimirv1.ListAuditEventsResponse, error)
 	getJob      func(n int) (*mimirv1.GetJobResponse, error)
+	dataset     func(req *mimirv1.CreateDatasetRequest) (*mimirv1.CreateDatasetResponse, error)
 	upload      http.Handler
 
 	calls atomic.Int32
@@ -122,6 +124,15 @@ func (f *fake) GetJob(_ context.Context, req *connect.Request[mimirv1.GetJobRequ
 
 // start serves f and returns a client for it. Retries wait at most a few
 // milliseconds so the tests stay quick.
+func (f *fake) CreateDataset(_ context.Context, req *connect.Request[mimirv1.CreateDatasetRequest]) (*connect.Response[mimirv1.CreateDatasetResponse], error) {
+	f.record(req.Header())
+	res, err := f.dataset(req.Msg)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(res), nil
+}
+
 func start(t *testing.T, f *fake, opts ...mimirsdk.Option) *mimirsdk.Client {
 	t.Helper()
 	mux := http.NewServeMux()
@@ -130,6 +141,7 @@ func start(t *testing.T, f *fake, opts ...mimirsdk.Option) *mimirsdk.Client {
 	mux.Handle(mimirv1connect.NewAuditServiceHandler(f))
 	mux.Handle(mimirv1connect.NewTrainingServiceHandler(f))
 	mux.Handle(mimirv1connect.NewApiKeyServiceHandler(f))
+	mux.Handle(mimirv1connect.NewDatasetServiceHandler(f))
 	if f.upload != nil {
 		mux.Handle("POST /api/uploads", f.upload)
 	}
@@ -584,5 +596,46 @@ func TestUploadError(t *testing.T) {
 	}
 	if apiErr.Message != "This file is larger than the 512 MB this server takes." {
 		t.Errorf("message = %q", apiErr.Message)
+	}
+}
+
+func TestUploadsSayTheirKind(t *testing.T) {
+	var got []*mimirv1.CreateDatasetRequest
+	f := &fake{dataset: func(req *mimirv1.CreateDatasetRequest) (*mimirv1.CreateDatasetResponse, error) {
+		got = append(got, req)
+		return &mimirv1.CreateDatasetResponse{Dataset: &mimirv1.Dataset{Id: "d1", Kind: req.GetKind()}}, nil
+	}}
+	c := start(t, f)
+	ctx := t.Context()
+	uploads := []struct {
+		kind   mimirsdk.DatasetKind
+		upload func() (*mimirsdk.CreateDatasetResponse, error)
+	}{
+		{mimirsdk.DatasetKindSounds, func() (*mimirsdk.CreateDatasetResponse, error) {
+			return c.Datasets.UploadSounds(ctx, "calls", strings.NewReader("sounds zip"))
+		}},
+		{mimirsdk.DatasetKindBoxes, func() (*mimirsdk.CreateDatasetResponse, error) {
+			return c.Datasets.UploadBoxes(ctx, "shelves", strings.NewReader("boxes zip"))
+		}},
+		{mimirsdk.DatasetKindText, func() (*mimirsdk.CreateDatasetResponse, error) {
+			return c.Datasets.UploadText(ctx, "letters", strings.NewReader("Dear reader,"))
+		}},
+	}
+	for i, u := range uploads {
+		res, err := u.upload()
+		if err != nil {
+			t.Fatal(err)
+		}
+		req := got[i]
+		if req.GetKind() != u.kind || res.GetDataset().GetKind() != u.kind {
+			t.Errorf("%v upload sent kind %v", u.kind, req.GetKind())
+		}
+		if u.kind == mimirsdk.DatasetKindText {
+			if string(req.GetText()) != "Dear reader," || len(req.GetArchive()) != 0 {
+				t.Errorf("text sent as text %q, archive %q", req.GetText(), req.GetArchive())
+			}
+		} else if len(req.GetArchive()) == 0 || len(req.GetText()) != 0 {
+			t.Errorf("%v sent archive %q, text %q", u.kind, req.GetArchive(), req.GetText())
+		}
 	}
 }
