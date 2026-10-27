@@ -19,6 +19,11 @@ The first release, built against mimir-server v0.2.0.
   `Settings.UpdateTraining` says where runs train, and `Workers.SetTasks`
   and the cloud GPU calls (`CloudGPU`, `UpdateCloudGPU`, `StopCloudGPU`)
   manage workers.
+- `client.Benchmarks`: a fixed test frozen from a dataset that every model
+  takes the same way, with a leaderboard, `Score`, `WaitForScores` and
+  `Leader`. Training on the dataset leaves the test rows out.
+- `Training.Compare` puts two to six runs side by side, and a finished run
+  carries its full report (`Job.GetReport()`).
 - The `webhook` package: signature checks, event decoding and an
   `http.Handler`.
 - `Datasets.UploadSounds` (a ZIP of WAV folders), `UploadBoxes` (a ZIP of

@@ -32,6 +32,7 @@ type fake struct {
 	mimirv1connect.UnimplementedAuditServiceHandler
 	mimirv1connect.UnimplementedTrainingServiceHandler
 	mimirv1connect.UnimplementedApiKeyServiceHandler
+	mimirv1connect.UnimplementedBenchmarkServiceHandler
 	mimirv1connect.UnimplementedDatasetServiceHandler
 
 	mu      sync.Mutex
@@ -44,6 +45,7 @@ type fake struct {
 	chat        func(req *mimirv1.ChatRequest, send func(*mimirv1.ChatResponse) error) error
 	audit       func(req *mimirv1.ListAuditEventsRequest) (*mimirv1.ListAuditEventsResponse, error)
 	getJob      func(n int) (*mimirv1.GetJobResponse, error)
+	getBench    func(n int) (*mimirv1.GetBenchmarkResponse, error)
 	dataset     func(req *mimirv1.CreateDatasetRequest) (*mimirv1.CreateDatasetResponse, error)
 	versions    func(req *mimirv1.ListModelVersionsRequest) (*mimirv1.ListModelVersionsResponse, error)
 	useVersion  func(req *mimirv1.UseModelVersionRequest) (*mimirv1.UseModelVersionResponse, error)
@@ -126,6 +128,15 @@ func (f *fake) GetJob(_ context.Context, req *connect.Request[mimirv1.GetJobRequ
 	return connect.NewResponse(res), nil
 }
 
+func (f *fake) GetBenchmark(_ context.Context, req *connect.Request[mimirv1.GetBenchmarkRequest]) (*connect.Response[mimirv1.GetBenchmarkResponse], error) {
+	n := f.record(req.Header())
+	res, err := f.getBench(n)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(res), nil
+}
+
 // start serves f and returns a client for it. Retries wait at most a few
 // milliseconds so the tests stay quick.
 func (f *fake) CreateDataset(_ context.Context, req *connect.Request[mimirv1.CreateDatasetRequest]) (*connect.Response[mimirv1.CreateDatasetResponse], error) {
@@ -145,6 +156,7 @@ func start(t *testing.T, f *fake, opts ...mimirsdk.Option) *mimirsdk.Client {
 	mux.Handle(mimirv1connect.NewAuditServiceHandler(f))
 	mux.Handle(mimirv1connect.NewTrainingServiceHandler(f))
 	mux.Handle(mimirv1connect.NewApiKeyServiceHandler(f))
+	mux.Handle(mimirv1connect.NewBenchmarkServiceHandler(f))
 	mux.Handle(mimirv1connect.NewDatasetServiceHandler(f))
 	if f.upload != nil {
 		mux.Handle("POST /api/uploads", f.upload)
