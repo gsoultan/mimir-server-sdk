@@ -115,6 +115,28 @@ func (s *ModelService) Download(ctx context.Context, id string) (*GetDeviceModel
 	return call(ctx, mimirv1connect.ModelServiceGetDeviceModelProcedure, s.raw.GetDeviceModel, &mimirv1.GetDeviceModelRequest{Id: id})
 }
 
+// Versions returns a model's stored versions, newest first. The live one,
+// which answers predictions, has Live set.
+func (s *ModelService) Versions(ctx context.Context, modelID string) ([]*ModelVersion, error) {
+	res, err := call(ctx, mimirv1connect.ModelServiceListModelVersionsProcedure, s.raw.ListModelVersions, &mimirv1.ListModelVersionsRequest{ModelId: modelID})
+	return res.GetVersions(), err
+}
+
+// UseVersion makes one of a model's versions the live one, to roll back to
+// an earlier version or forward to a newer one.
+func (s *ModelService) UseVersion(ctx context.Context, modelID, versionID string) (*Model, error) {
+	res, err := call(ctx, mimirv1connect.ModelServiceUseModelVersionProcedure, s.raw.UseModelVersion, &mimirv1.UseModelVersionRequest{ModelId: modelID, VersionId: versionID})
+	return res.GetModel(), err
+}
+
+// Quality returns how a model does in use: its answers and the feedback
+// on them for each of the last days (30 when days is 0, at most 365), the
+// last 7 days' accuracy by that feedback, and whether it has dropped well
+// below the model's score when trained.
+func (s *ModelService) Quality(ctx context.Context, modelID string, days int32) (*GetModelQualityResponse, error) {
+	return call(ctx, mimirv1connect.ModelServiceGetModelQualityProcedure, s.raw.GetModelQuality, &mimirv1.GetModelQualityRequest{ModelId: modelID, Days: days})
+}
+
 // Predict runs one example through a model: a tensor, a table row (Fields)
 // or a photo, depending on what the model reads.
 func (s *ModelService) Predict(ctx context.Context, req *PredictRequest) (*PredictResponse, error) {
@@ -130,6 +152,24 @@ func (s *ModelService) PredictFields(ctx context.Context, modelID string, fields
 // PredictPhoto asks a model that looks at photos about one JPG, PNG or GIF.
 func (s *ModelService) PredictPhoto(ctx context.Context, modelID string, photo []byte) (*PredictResponse, error) {
 	return s.Predict(ctx, &mimirv1.PredictRequest{ModelId: modelID, Photo: photo})
+}
+
+// SendFeedback tells the server what a picking model's answer should have
+// been: predictionID is PredictResponse.PredictionId, label the right
+// answer. It reports whether the model got it right. Sending feedback
+// again replaces the earlier one. Answers are kept for feedback for 30
+// days; after that SendFeedback fails with ErrNotFound.
+func (s *ModelService) SendFeedback(ctx context.Context, predictionID, label string) (bool, error) {
+	res, err := call(ctx, mimirv1connect.PredictServiceSendFeedbackProcedure, s.predict.SendFeedback, &mimirv1.SendFeedbackRequest{PredictionId: predictionID, Label: label})
+	return res.GetCorrect(), err
+}
+
+// SendFeedbackValue is SendFeedback for a model that answers with a
+// number. The answer counts as right within 10% of value, or 0.1 of it
+// when value is 0.
+func (s *ModelService) SendFeedbackValue(ctx context.Context, predictionID string, value float64) (bool, error) {
+	res, err := call(ctx, mimirv1connect.PredictServiceSendFeedbackProcedure, s.predict.SendFeedback, &mimirv1.SendFeedbackRequest{PredictionId: predictionID, Value: value})
+	return res.GetCorrect(), err
 }
 
 // Generate continues a prompt with a language model and returns the whole
