@@ -4,5 +4,7 @@ github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
 github.com/gsoultan/mimir-server v0.1.4-0.20261027172115-d46c9c5838fa h1:8A1rhDpBLsfLeYN+lPdpK7N7hzD6cc2JZPnGGRMvZdY=
 github.com/gsoultan/mimir-server v0.1.4-0.20261027172115-d46c9c5838fa/go.mod h1:s7YSkXEeOrUEpqYXKOEnLb7dzlzuFPcY21VeUEcm+iU=
+github.com/gsoultan/mimir-server v0.2.0 h1:SRkcqGeTEwsA92rvzE90zqukJJX7gqhGRLSaGOeg4kI=
+github.com/gsoultan/mimir-server v0.2.0/go.mod h1:sU533rdF30O3GvFVKraHDfSya+A3zxrSIkdC5HyXgzo=
 google.golang.org/protobuf v1.36.12 h1:pJOKDDOyeXErUroCihFAd5LQuwXBSpVnKGrj5o/fwxc=
 google.golang.org/protobuf v1.36.12/go.mod h1:HTf+CrKn2C3g5S8VImy6tdcUvCska2kB7j23XfzDpco=

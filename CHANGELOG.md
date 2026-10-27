@@ -26,3 +26,9 @@ next release.
   photos and a boxes.csv) and `UploadText` (writing for a language model),
   with the `DatasetKindSounds`, `DatasetKindBoxes` and `DatasetKindText`
   kinds.
+- `Models.SendFeedback` and `SendFeedbackValue` send the right answer for
+  a prediction, by its `PredictionId`; `Models.Quality` returns how a model
+  does in use; `webhook.AccuracyDropped` and `Event.Accuracy` for the
+  alert.
+- `Models.Versions` and `UseVersion` list a model's versions and roll back
+  or forward.

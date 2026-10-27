@@ -55,6 +55,21 @@ func ExampleModelService_PredictFields() {
 	fmt.Printf("%s (%.0f%% sure)\n", best.GetLabel(), best.GetProbability()*100)
 }
 
+func ExampleModelService_SendFeedback() {
+	client, _ := mimirsdk.NewFromEnv()
+	ctx := context.Background()
+	answer, err := client.Models.PredictFields(ctx, "churn-model-id", map[string]string{"plan": "monthly"})
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Later, once the customer has stayed or left:
+	right, err := client.Models.SendFeedback(ctx, answer.GetPredictionId(), "stayed")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("the model was right:", right)
+}
+
 func ExampleTrainingService_Wait() {
 	client, _ := mimirsdk.NewFromEnv()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
