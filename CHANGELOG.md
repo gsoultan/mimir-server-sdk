@@ -2,8 +2,7 @@
 
 ## v0.1.0 (unreleased)
 
-The first release, built against mimir-server main (d46c9c5) until its
-next release.
+The first release, built against mimir-server v0.2.0.
 
 - `mimirsdk.New` and `NewFromEnv`, with options for the API key, HTTP
   client, timeout, retries, User-Agent and headers.
