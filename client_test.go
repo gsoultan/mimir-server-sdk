@@ -47,6 +47,10 @@ type fake struct {
 	getJob      func(n int) (*mimirv1.GetJobResponse, error)
 	getBench    func(n int) (*mimirv1.GetBenchmarkResponse, error)
 	dataset     func(req *mimirv1.CreateDatasetRequest) (*mimirv1.CreateDatasetResponse, error)
+	versions    func(req *mimirv1.ListModelVersionsRequest) (*mimirv1.ListModelVersionsResponse, error)
+	useVersion  func(req *mimirv1.UseModelVersionRequest) (*mimirv1.UseModelVersionResponse, error)
+	quality     func(req *mimirv1.GetModelQualityRequest) (*mimirv1.GetModelQualityResponse, error)
+	feedback    func(req *mimirv1.SendFeedbackRequest) (*mimirv1.SendFeedbackResponse, error)
 	upload      http.Handler
 
 	calls atomic.Int32

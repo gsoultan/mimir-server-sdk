@@ -49,6 +49,9 @@ type (
 	Delivery                   = mimirv1.Delivery
 	Worker                     = mimirv1.Worker
 	Stats                      = mimirv1.Stats
+	ModelVersion               = mimirv1.ModelVersion
+	ModelVersionSource         = mimirv1.ModelVersionSource
+	QualityDay                 = mimirv1.QualityDay
 	CreateModelRequest         = mimirv1.CreateModelRequest
 	UpdateModelRequest         = mimirv1.UpdateModelRequest
 	SaveArchitectureRequest    = mimirv1.SaveArchitectureRequest
@@ -64,6 +67,7 @@ type (
 	CompareJobsResponse        = mimirv1.CompareJobsResponse
 	CreateBenchmarkRequest     = mimirv1.CreateBenchmarkRequest
 	GetBenchmarkResponse       = mimirv1.GetBenchmarkResponse
+	GetModelQualityResponse    = mimirv1.GetModelQualityResponse
 	CreateDatasetRequest       = mimirv1.CreateDatasetRequest
 	CreateDatasetResponse      = mimirv1.CreateDatasetResponse
 	GetDatasetResponse         = mimirv1.GetDatasetResponse
@@ -109,6 +113,13 @@ const (
 const (
 	ModelStatusReady  = mimirv1.ModelStatus_MODEL_STATUS_READY
 	ModelStatusFailed = mimirv1.ModelStatus_MODEL_STATUS_FAILED
+)
+
+// ModelVersionSource values: where a version's weights came from.
+const (
+	ModelVersionSourceUploaded     = mimirv1.ModelVersionSource_MODEL_VERSION_SOURCE_UPLOADED
+	ModelVersionSourceTrained      = mimirv1.ModelVersionSource_MODEL_VERSION_SOURCE_TRAINED
+	ModelVersionSourceKeepLearning = mimirv1.ModelVersionSource_MODEL_VERSION_SOURCE_KEEP_LEARNING
 )
 
 // JobStatus values.

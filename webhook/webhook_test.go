@@ -77,6 +77,28 @@ func TestParseAndDecode(t *testing.T) {
 	}
 }
 
+func TestAccuracyDropped(t *testing.T) {
+	data := `{"id":"e3","type":"model.accuracy_dropped","time":"2026-10-27T10:00:00Z","data":{"model":{"id":"m1","name":"churn","architecture":"table","version_id":"v2"},"week":{"answers":400,"feedback":30,"accuracy":0.6},"accuracy":0.9}}`
+	ev, err := webhook.Parse(secret, webhook.Sign(secret, time.Now(), []byte(data)), []byte(data), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ev.Type != webhook.AccuracyDropped {
+		t.Errorf("type = %q", ev.Type)
+	}
+	a, err := ev.Accuracy()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a.Model.ID != "m1" || a.Model.VersionID != "v2" || a.Week.Feedback != 30 || a.Week.Accuracy != 0.6 || a.Accuracy != 0.9 {
+		t.Errorf("accuracy event = %+v", a)
+	}
+	other := &webhook.Event{Type: webhook.ModelCreated, Data: []byte(`{}`)}
+	if _, err := other.Accuracy(); err == nil {
+		t.Error("a model.created event decoded as accuracy_dropped")
+	}
+}
+
 func TestHandler(t *testing.T) {
 	var got *webhook.Event
 	fail := false
