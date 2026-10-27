@@ -43,9 +43,12 @@ const MaxBodyBytes = 1 << 20
 
 // Event types.
 const (
-	ModelCreated     = "model.created"
-	ModelUpdated     = "model.updated"
-	ModelDeleted     = "model.deleted"
+	ModelCreated = "model.created"
+	ModelUpdated = "model.updated"
+	ModelDeleted = "model.deleted"
+	// AccuracyDropped is sent, at most once a day for each model, when a
+	// model gets clearly fewer answers right in use than when trained.
+	AccuracyDropped  = "model.accuracy_dropped"
 	TrainingQueued   = "training.queued"
 	TrainingFinished = "training.finished"
 	TrainingFailed   = "training.failed"
@@ -121,7 +124,7 @@ type Event struct {
 	ID   string    `json:"id"`
 	Type string    `json:"type"`
 	Time time.Time `json:"time"`
-	// Data depends on Type; Model, Job and User decode it.
+	// Data depends on Type; Model, Accuracy, Job and User decode it.
 	Data json.RawMessage `json:"data"`
 }
 
@@ -214,6 +217,30 @@ type UserEvent struct {
 		Name  string `json:"name"`
 	} `json:"user"`
 	Actor string `json:"actor"`
+}
+
+// AccuracyEvent is the data of model.accuracy_dropped.
+type AccuracyEvent struct {
+	Model struct {
+		ID           string `json:"id"`
+		Name         string `json:"name"`
+		Architecture string `json:"architecture"`
+		VersionID    string `json:"version_id"`
+	} `json:"model"`
+	// Week is the last 7 days' answers, the feedback apps sent on them,
+	// and the share of that feedback the model got right.
+	Week struct {
+		Answers  int64   `json:"answers"`
+		Feedback int64   `json:"feedback"`
+		Accuracy float64 `json:"accuracy"`
+	} `json:"week"`
+	// Accuracy is the model's held-out score when trained.
+	Accuracy float64 `json:"accuracy"`
+}
+
+// Accuracy decodes a model.accuracy_dropped event's data.
+func (e *Event) Accuracy() (*AccuracyEvent, error) {
+	return decode[AccuracyEvent](e, AccuracyDropped)
 }
 
 // Model decodes a model event's data.
