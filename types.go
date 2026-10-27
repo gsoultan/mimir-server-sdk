@@ -126,6 +126,9 @@ const (
 	DatasetKindMnist      = mimirv1.DatasetKind_DATASET_KIND_MNIST
 	DatasetKindPhotos     = mimirv1.DatasetKind_DATASET_KIND_PHOTOS
 	DatasetKindPhotoTable = mimirv1.DatasetKind_DATASET_KIND_PHOTO_TABLE
+	DatasetKindText       = mimirv1.DatasetKind_DATASET_KIND_TEXT
+	DatasetKindSounds     = mimirv1.DatasetKind_DATASET_KIND_SOUNDS
+	DatasetKindBoxes      = mimirv1.DatasetKind_DATASET_KIND_BOXES
 )
 
 // DeliveryStatus values.

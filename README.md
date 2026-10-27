@@ -59,7 +59,7 @@ the key in `$MIMIR_API_KEY`.
 | Service | What it does |
 | --- | --- |
 | `client.Models` | list, get, upload (`.mim`, ONNX, GGUF, streamed so files can be larger than memory), update, delete; `Predict`, `PredictFields`, `PredictPhoto`; `Generate`, `GenerateStream`, `Chat`, `ChatText` for language models |
-| `client.Datasets` | `UploadCSV`, `UploadPhotos`, `Create` from a database query, a bucket or a template; get, refresh, check, delete |
+| `client.Datasets` | `UploadCSV`, `UploadPhotos`, `UploadSounds`, `UploadBoxes`, `UploadText`, `Create` from a database query, a bucket or a template; get, refresh, check, delete |
 | `client.Training` | `Start`, `Wait` (with progress), get, list, cancel, resume, delete, `Compare` (runs side by side), `KeepLearning` (on an interval, optionally waiting for new rows) |
 | `client.Benchmarks` | `Freeze` a test from a dataset, `Create` from test rows of your own, `Score` models, `WaitForScores`, `Leader`, get the leaderboard, list, delete |
 | `client.Webhooks` | create, update, delete, `SendTest`, `Deliveries` (paged), `Redeliver` |
@@ -249,7 +249,7 @@ releases. Each release names the mimir-server release it is built against:
 
 | SDK | mimir-server |
 | --- | --- |
-| v0.1.x | v0.1.3 and later 0.1 releases |
+| v0.1.x | v0.2.0 and later 0.2 releases |
 
 ## Development
 

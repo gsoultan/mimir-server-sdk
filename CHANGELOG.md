@@ -2,7 +2,7 @@
 
 ## v0.1.0 (unreleased)
 
-The first release, built against mimir-server v0.1.3.
+The first release, built against mimir-server v0.2.0.
 
 - `mimirsdk.New` and `NewFromEnv`, with options for the API key, HTTP
   client, timeout, retries, User-Agent and headers.
@@ -26,3 +26,7 @@ The first release, built against mimir-server v0.1.3.
   carries its full report (`Job.GetReport()`).
 - The `webhook` package: signature checks, event decoding and an
   `http.Handler`.
+- `Datasets.UploadSounds` (a ZIP of WAV folders), `UploadBoxes` (a ZIP of
+  photos and a boxes.csv) and `UploadText` (writing for a language model),
+  with the `DatasetKindSounds`, `DatasetKindBoxes` and `DatasetKindText`
+  kinds.
