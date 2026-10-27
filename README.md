@@ -58,7 +58,7 @@ the key in `$MIMIR_API_KEY`.
 
 | Service | What it does |
 | --- | --- |
-| `client.Models` | list, get, upload (`.mim`, ONNX, GGUF, streamed so files can be larger than memory), update, delete; `Predict`, `PredictFields`, `PredictPhoto`; `Generate`, `GenerateStream`, `Chat`, `ChatText` for language models |
+| `client.Models` | list, get, upload (`.mim`, ONNX, GGUF, streamed so files can be larger than memory), update, delete; `Predict`, `PredictFields`, `PredictPhoto`; `Generate`, `GenerateStream`, `Chat`, `ChatText` for language models; `SendFeedback` and `Quality` for how a model does in use; `Versions` and `UseVersion` to roll back |
 | `client.Datasets` | `UploadCSV`, `UploadPhotos`, `UploadSounds`, `UploadBoxes`, `UploadText`, `Create` from a database query, a bucket or a template; get, refresh, check, delete |
 | `client.Training` | `Start`, `Wait` (with progress), get, list, cancel, resume, delete, `KeepLearning` (on an interval, optionally waiting for new rows) |
 | `client.Webhooks` | create, update, delete, `SendTest`, `Deliveries` (paged), `Redeliver` |
@@ -114,6 +114,36 @@ job, err = client.Training.Wait(ctx, job.GetId(), mimirsdk.WaitOptions{
 ```
 
 `Wait` returns a `*mimirsdk.JobError` when the run fails or is cancelled.
+
+## Feedback and versions
+
+Every answer comes with a `PredictionId`. Once your app learns what the
+right answer was, send it back, and the model page shows how often the
+model gets it right in use:
+
+```go
+answer, err := client.Models.PredictFields(ctx, modelID, fields)
+// ... later, when the customer stays or leaves:
+right, err := client.Models.SendFeedback(ctx, answer.GetPredictionId(), "stayed")
+// For a model that answers with a number:
+right, err = client.Models.SendFeedbackValue(ctx, answer.GetPredictionId(), 41.5)
+
+q, err := client.Models.Quality(ctx, modelID, 30)
+fmt.Printf("%.0f%% right this week\n", q.GetWeekAccuracy()*100)
+```
+
+Answers are kept for feedback for 30 days. When a model gets clearly fewer
+right than when it was trained, the server sends a
+`webhook.AccuracyDropped` event, and `ev.Accuracy()` decodes it.
+
+Each upload, training run and keep-learning pass stores a new version of
+the model. `Versions` lists them and `UseVersion` makes an earlier one live
+again:
+
+```go
+versions, err := client.Models.Versions(ctx, modelID)
+model, err := client.Models.UseVersion(ctx, modelID, versions[1].GetId())
+```
 
 ## Errors
 
