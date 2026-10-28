@@ -1,8 +1,9 @@
 # Changelog
 
-## Unreleased
+## v0.2.0
 
-Needs the next mimir-server release (the one after v0.2.0).
+Built against mimir-server v0.3.0, and needs it for scorings, documents
+and explanations.
 
 - `client.Scorings`: answer every row of a table with one model at once,
   from a CSV (`ScoreCSV`), a database query on a schedule (`ScoreQuery`),
@@ -16,10 +17,25 @@ Needs the next mimir-server release (the one after v0.2.0).
 - `Models.Explain`: why a table model gave its answer, as each column's
   effect against a typical row; `Models.ExplainModel`: which columns
   matter most to it overall.
+- `client.Benchmarks`: a fixed test frozen from a dataset that every model
+  takes the same way, with a leaderboard, `Score`, `WaitForScores` and
+  `Leader`. Training on the dataset leaves the test rows out.
+- `Training.Compare` puts two to six runs side by side, and a finished run
+  carries its full report (`Job.GetReport()`).
+- `Datasets.UploadSounds` (a ZIP of WAV folders), `UploadBoxes` (a ZIP of
+  photos and a boxes.csv) and `UploadText` (writing for a language model),
+  with the `DatasetKindSounds`, `DatasetKindBoxes` and `DatasetKindText`
+  kinds.
+- `Models.SendFeedback` and `SendFeedbackValue` send the right answer for
+  a prediction, by its `PredictionId`; `Models.Quality` returns how a model
+  does in use; `webhook.AccuracyDropped` and `Event.Accuracy` for the
+  alert.
+- `Models.Versions` and `UseVersion` list a model's versions and roll back
+  or forward.
 
-## v0.1.0 (unreleased)
+## v0.1.0
 
-The first release, built against mimir-server v0.2.0.
+The first release, built against mimir-server v0.1.3.
 
 - `mimirsdk.New` and `NewFromEnv`, with options for the API key, HTTP
   client, timeout, retries, User-Agent and headers.
@@ -36,20 +52,5 @@ The first release, built against mimir-server v0.2.0.
   `Settings.UpdateTraining` says where runs train, and `Workers.SetTasks`
   and the cloud GPU calls (`CloudGPU`, `UpdateCloudGPU`, `StopCloudGPU`)
   manage workers.
-- `client.Benchmarks`: a fixed test frozen from a dataset that every model
-  takes the same way, with a leaderboard, `Score`, `WaitForScores` and
-  `Leader`. Training on the dataset leaves the test rows out.
-- `Training.Compare` puts two to six runs side by side, and a finished run
-  carries its full report (`Job.GetReport()`).
 - The `webhook` package: signature checks, event decoding and an
   `http.Handler`.
-- `Datasets.UploadSounds` (a ZIP of WAV folders), `UploadBoxes` (a ZIP of
-  photos and a boxes.csv) and `UploadText` (writing for a language model),
-  with the `DatasetKindSounds`, `DatasetKindBoxes` and `DatasetKindText`
-  kinds.
-- `Models.SendFeedback` and `SendFeedbackValue` send the right answer for
-  a prediction, by its `PredictionId`; `Models.Quality` returns how a model
-  does in use; `webhook.AccuracyDropped` and `Event.Accuracy` for the
-  alert.
-- `Models.Versions` and `UseVersion` list a model's versions and roll back
-  or forward.
