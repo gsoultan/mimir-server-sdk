@@ -351,7 +351,8 @@ releases. Each release names the mimir-server release it is built against:
 
 | SDK | mimir-server |
 | --- | --- |
-| v0.1.x | v0.2.0 and later 0.2 releases |
+| v0.2.x | v0.3.0 and later 0.3 releases |
+| v0.1.x | v0.1.3 |
 
 ## Development
 
