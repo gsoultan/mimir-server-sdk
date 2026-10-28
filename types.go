@@ -61,6 +61,10 @@ type (
 	SaveArchitectureRequest    = mimirv1.SaveArchitectureRequest
 	PredictRequest             = mimirv1.PredictRequest
 	PredictResponse            = mimirv1.PredictResponse
+	ExplainResponse            = mimirv1.ExplainResponse
+	ExplainModelResponse       = mimirv1.ExplainModelResponse
+	Contribution               = mimirv1.Contribution
+	ColumnImportance           = mimirv1.ColumnImportance
 	GenerateRequest            = mimirv1.GenerateRequest
 	GenerateResponse           = mimirv1.GenerateResponse
 	GenerateStreamRequest      = mimirv1.GenerateStreamRequest
