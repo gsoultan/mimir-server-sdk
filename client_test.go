@@ -35,6 +35,7 @@ type fake struct {
 	mimirv1connect.UnimplementedBenchmarkServiceHandler
 	mimirv1connect.UnimplementedDatasetServiceHandler
 	mimirv1connect.UnimplementedScoringServiceHandler
+	mimirv1connect.UnimplementedDocumentServiceHandler
 
 	mu      sync.Mutex
 	headers []http.Header
@@ -55,6 +56,8 @@ type fake struct {
 	upload      http.Handler
 	getScoring  func(n int) (*mimirv1.GetScoringResponse, error)
 	results     http.Handler
+	getDocument func(n int) (*mimirv1.GetDocumentResponse, error)
+	ask         func(req *mimirv1.AskRequest, send func(*mimirv1.AskResponse) error) error
 
 	calls atomic.Int32
 }
@@ -160,6 +163,19 @@ func (f *fake) CreateDataset(_ context.Context, req *connect.Request[mimirv1.Cre
 	return connect.NewResponse(res), nil
 }
 
+func (f *fake) GetDocument(_ context.Context, req *connect.Request[mimirv1.GetDocumentRequest]) (*connect.Response[mimirv1.GetDocumentResponse], error) {
+	n := int(f.calls.Add(1))
+	res, err := f.getDocument(n)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(res), nil
+}
+
+func (f *fake) Ask(_ context.Context, req *connect.Request[mimirv1.AskRequest], out *connect.ServerStream[mimirv1.AskResponse]) error {
+	return f.ask(req.Msg, out.Send)
+}
+
 func start(t *testing.T, f *fake, opts ...mimirsdk.Option) *mimirsdk.Client {
 	t.Helper()
 	mux := http.NewServeMux()
@@ -171,6 +187,7 @@ func start(t *testing.T, f *fake, opts ...mimirsdk.Option) *mimirsdk.Client {
 	mux.Handle(mimirv1connect.NewBenchmarkServiceHandler(f))
 	mux.Handle(mimirv1connect.NewDatasetServiceHandler(f))
 	mux.Handle(mimirv1connect.NewScoringServiceHandler(f))
+	mux.Handle(mimirv1connect.NewDocumentServiceHandler(f))
 	if f.results != nil {
 		mux.Handle("GET /api/scorings/{id}/results", f.results)
 	}
