@@ -13,6 +13,9 @@ Needs the next mimir-server release (the one after v0.2.0).
   collection, `AddFile` PDFs, Word, Markdown, web pages or text, follow
   them with `WaitDocument`, then `Ask` (streamed, sources first) or
   `AskText`, or `Search` for the matching passages.
+- `Models.Explain`: why a table model gave its answer, as each column's
+  effect against a typical row; `Models.ExplainModel`: which columns
+  matter most to it overall.
 
 ## v0.1.0 (unreleased)
 

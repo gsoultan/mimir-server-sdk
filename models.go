@@ -172,6 +172,23 @@ func (s *ModelService) SendFeedbackValue(ctx context.Context, predictionID strin
 	return res.GetCorrect(), err
 }
 
+// Explain says why a model taught on a table gave its answer for one row:
+// each column's effect on it, against a typical row. For a model that
+// picks, label names the answer to explain (empty for the one it gave) and
+// effects are in chance of that answer (0.12 is 12 points); for one that
+// answers with a number they are in its units. The effects add up to
+// Value minus Typical.
+func (s *ModelService) Explain(ctx context.Context, modelID string, fields map[string]string, label string) (*ExplainResponse, error) {
+	return call(ctx, mimirv1connect.PredictServiceExplainProcedure, s.predict.Explain, &mimirv1.ExplainRequest{ModelId: modelID, Fields: fields, Label: label})
+}
+
+// ExplainModel says which columns matter most to a model taught on a
+// table: the average size of each column's effect over up to 24 of its
+// recent questions, or of the examples it learned from when it has none.
+func (s *ModelService) ExplainModel(ctx context.Context, modelID string) (*ExplainModelResponse, error) {
+	return call(ctx, mimirv1connect.PredictServiceExplainModelProcedure, s.predict.ExplainModel, &mimirv1.ExplainModelRequest{ModelId: modelID})
+}
+
 // Generate continues a prompt with a language model and returns the whole
 // text at once.
 func (s *ModelService) Generate(ctx context.Context, req *GenerateRequest) (*GenerateResponse, error) {
