@@ -45,6 +45,9 @@ type (
 	BenchmarkScore             = mimirv1.BenchmarkScore
 	Candidate                  = mimirv1.Candidate
 	Scoring                    = mimirv1.Scoring
+	Collection                 = mimirv1.Collection
+	Document                   = mimirv1.Document
+	Passage                    = mimirv1.Passage
 	Webhook                    = mimirv1.Webhook
 	DeliveryStatus             = mimirv1.DeliveryStatus
 	Delivery                   = mimirv1.Delivery
@@ -70,6 +73,11 @@ type (
 	GetBenchmarkResponse       = mimirv1.GetBenchmarkResponse
 	CreateScoringRequest       = mimirv1.CreateScoringRequest
 	GetScoringResponse         = mimirv1.GetScoringResponse
+	CreateCollectionRequest    = mimirv1.CreateCollectionRequest
+	UpdateCollectionRequest    = mimirv1.UpdateCollectionRequest
+	GetCollectionResponse      = mimirv1.GetCollectionResponse
+	AskRequest                 = mimirv1.AskRequest
+	AskResponse                = mimirv1.AskResponse
 	GetModelQualityResponse    = mimirv1.GetModelQualityResponse
 	CreateDatasetRequest       = mimirv1.CreateDatasetRequest
 	CreateDatasetResponse      = mimirv1.CreateDatasetResponse

@@ -37,6 +37,7 @@ type Client struct {
 	Templates  *TemplateService
 	Benchmarks *BenchmarkService
 	Scorings   *ScoringService
+	Documents  *DocumentService
 }
 
 // RawClients are the generated Connect clients for every service. Use them
@@ -57,6 +58,7 @@ type RawClients struct {
 	Templates  mimirv1connect.TemplateServiceClient
 	Benchmarks mimirv1connect.BenchmarkServiceClient
 	Scorings   mimirv1connect.ScoringServiceClient
+	Documents  mimirv1connect.DocumentServiceClient
 }
 
 // New returns a client for the server at baseURL, such as
@@ -95,6 +97,7 @@ func New(baseURL string, opts ...Option) (*Client, error) {
 		Templates:  mimirv1connect.NewTemplateServiceClient(h, base, copts...),
 		Benchmarks: mimirv1connect.NewBenchmarkServiceClient(h, base, copts...),
 		Scorings:   mimirv1connect.NewScoringServiceClient(h, base, copts...),
+		Documents:  mimirv1connect.NewDocumentServiceClient(h, base, copts...),
 	}
 	return &Client{
 		baseURL:    base,
@@ -113,6 +116,7 @@ func New(baseURL string, opts ...Option) (*Client, error) {
 		Templates:  &TemplateService{raw: raw.Templates},
 		Benchmarks: &BenchmarkService{raw: raw.Benchmarks},
 		Scorings:   &ScoringService{raw: raw.Scorings, http: h, base: base, download: ic},
+		Documents:  &DocumentService{raw: raw.Documents},
 	}, nil
 }
 
