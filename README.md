@@ -61,6 +61,7 @@ the key in `$MIMIR_API_KEY`.
 | `client.Models` | list, get, upload (`.mim`, ONNX, GGUF, streamed so files can be larger than memory), update, delete; `Predict`, `PredictFields`, `PredictPhoto`; `Generate`, `GenerateStream`, `Chat`, `ChatText` for language models; `SendFeedback` and `Quality` for how a model does in use; `Versions` and `UseVersion` to roll back |
 | `client.Datasets` | `UploadCSV`, `UploadPhotos`, `UploadSounds`, `UploadBoxes`, `UploadText`, `Create` from a database query, a bucket or a template; get, refresh, check, delete |
 | `client.Training` | `Start`, `Wait` (with progress), get, list, cancel, resume, delete, `Compare` (runs side by side), `KeepLearning` (on an interval, optionally waiting for new rows) |
+| `client.Scorings` | `ScoreCSV`, `ScoreQuery` (on a schedule), `Create` from storage or a dataset; `Wait`, `Download` the results, run again, cancel, delete |
 | `client.Benchmarks` | `Freeze` a test from a dataset, `Create` from test rows of your own, `Score` models, `WaitForScores`, `Leader`, get the leaderboard, list, delete |
 | `client.Webhooks` | create, update, delete, `SendTest`, `Deliveries` (paged), `Redeliver` |
 | `client.APIKeys` | list, create, revoke the caller's keys |
@@ -118,6 +119,26 @@ job, err = client.Training.Wait(ctx, job.GetId(), mimirsdk.WaitOptions{
 finished run carries its full report: `job.GetReport()` has the share of
 right answers, the per-label scores and the confusion table, or the average
 miss and R² for a number model.
+
+## Scoring a whole list
+
+`client.Scorings` answers every row of a table with one model at once, in
+the background on the server, and keeps the rows with each answer next to
+them as a CSV.
+
+```go
+sc, err := client.Scorings.ScoreCSV(ctx, modelID, "October customers", csvBytes)
+sc, err = client.Scorings.Wait(ctx, sc.GetId(), mimirsdk.ScoringWaitOptions{})
+f, _ := os.Create("scored.csv")
+defer f.Close()
+_, err = client.Scorings.Download(ctx, sc.GetId(), f)
+```
+
+The rows need at least one column the model reads, and no answer column.
+The results have the rows' own columns, then `predicted`, `confidence`
+(or `suggestions` for a ranking model) and `problem`, which says why a row
+couldn't be answered. `ScoreQuery` scores a database query's rows, and
+with an interval of an hour or more scores them again on a schedule.
 
 ## Benchmarks
 
