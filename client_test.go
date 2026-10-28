@@ -53,6 +53,8 @@ type fake struct {
 	useVersion  func(req *mimirv1.UseModelVersionRequest) (*mimirv1.UseModelVersionResponse, error)
 	quality     func(req *mimirv1.GetModelQualityRequest) (*mimirv1.GetModelQualityResponse, error)
 	feedback    func(req *mimirv1.SendFeedbackRequest) (*mimirv1.SendFeedbackResponse, error)
+	explain     func(req *mimirv1.ExplainRequest) (*mimirv1.ExplainResponse, error)
+	overview    func(req *mimirv1.ExplainModelRequest) (*mimirv1.ExplainModelResponse, error)
 	upload      http.Handler
 	getScoring  func(n int) (*mimirv1.GetScoringResponse, error)
 	results     http.Handler
