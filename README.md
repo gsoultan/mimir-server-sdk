@@ -62,6 +62,7 @@ the key in `$MIMIR_API_KEY`.
 | `client.Datasets` | `UploadCSV`, `UploadPhotos`, `UploadSounds`, `UploadBoxes`, `UploadText`, `Create` from a database query, a bucket or a template; get, refresh, check, delete |
 | `client.Training` | `Start`, `Wait` (with progress), get, list, cancel, resume, delete, `Compare` (runs side by side), `KeepLearning` (on an interval, optionally waiting for new rows) |
 | `client.Scorings` | `ScoreCSV`, `ScoreQuery` (on a schedule), `Create` from storage or a dataset; `Wait`, `Download` the results, run again, cancel, delete |
+| `client.Documents` | Collections of your files: `AddFile`, `WaitDocument`, `Search`, `Ask` and `AskText` with the passages cited |
 | `client.Benchmarks` | `Freeze` a test from a dataset, `Create` from test rows of your own, `Score` models, `WaitForScores`, `Leader`, get the leaderboard, list, delete |
 | `client.Webhooks` | create, update, delete, `SendTest`, `Deliveries` (paged), `Redeliver` |
 | `client.APIKeys` | list, create, revoke the caller's keys |
@@ -139,6 +140,33 @@ The results have the rows' own columns, then `predicted`, `confidence`
 (or `suggestions` for a ranking model) and `problem`, which says why a row
 couldn't be answered. `ScoreQuery` scores a database query's rows, and
 with an interval of an hour or more scores them again on a schedule.
+
+## Asking your documents
+
+`client.Documents` answers questions from your own files. The server
+reads each file into passages in the background and answers from the ones
+that best match, citing them as [1], [2]:
+
+```go
+col, err := client.Documents.CreateCollection(ctx, &mimirsdk.CreateCollectionRequest{
+	Name: "Shop handbook", EmbeddingModelId: modelID,
+})
+doc, err := client.Documents.AddFile(ctx, col.GetId(), "returns-policy.pdf")
+_, err = client.Documents.WaitDocument(ctx, doc.GetId(), 0)
+
+answer, err := client.Documents.AskText(ctx, &mimirsdk.AskRequest{
+	CollectionId: col.GetId(),
+	Messages:     []*mimirsdk.ChatMessage{mimirsdk.UserMessage("Can a customer return a used item?")},
+})
+fmt.Println(answer.Text)
+for i, p := range answer.Sources {
+	fmt.Printf("[%d] %s, passage %d\n", i+1, p.GetDocumentName(), p.GetNumber())
+}
+```
+
+`Ask` streams the answer instead, with the sources in its first message,
+and `Search` returns the matching passages without an answer. Apps that
+speak the OpenAI API can ask the collection too, by its `ApiName`.
 
 ## Benchmarks
 
