@@ -44,6 +44,7 @@ type (
 	Benchmark                  = mimirv1.Benchmark
 	BenchmarkScore             = mimirv1.BenchmarkScore
 	Candidate                  = mimirv1.Candidate
+	Scoring                    = mimirv1.Scoring
 	Webhook                    = mimirv1.Webhook
 	DeliveryStatus             = mimirv1.DeliveryStatus
 	Delivery                   = mimirv1.Delivery
@@ -67,6 +68,8 @@ type (
 	CompareJobsResponse        = mimirv1.CompareJobsResponse
 	CreateBenchmarkRequest     = mimirv1.CreateBenchmarkRequest
 	GetBenchmarkResponse       = mimirv1.GetBenchmarkResponse
+	CreateScoringRequest       = mimirv1.CreateScoringRequest
+	GetScoringResponse         = mimirv1.GetScoringResponse
 	GetModelQualityResponse    = mimirv1.GetModelQualityResponse
 	CreateDatasetRequest       = mimirv1.CreateDatasetRequest
 	CreateDatasetResponse      = mimirv1.CreateDatasetResponse
