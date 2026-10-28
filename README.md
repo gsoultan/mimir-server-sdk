@@ -58,7 +58,7 @@ the key in `$MIMIR_API_KEY`.
 
 | Service | What it does |
 | --- | --- |
-| `client.Models` | list, get, upload (`.mim`, ONNX, GGUF, streamed so files can be larger than memory), update, delete; `Predict`, `PredictFields`, `PredictPhoto`; `Generate`, `GenerateStream`, `Chat`, `ChatText` for language models; `SendFeedback` and `Quality` for how a model does in use; `Versions` and `UseVersion` to roll back |
+| `client.Models` | list, get, upload (`.mim`, ONNX, GGUF, streamed so files can be larger than memory), update, delete; `Predict`, `PredictFields`, `PredictPhoto`; `Explain` and `ExplainModel` for why a table model answers as it does; `Generate`, `GenerateStream`, `Chat`, `ChatText` for language models; `SendFeedback` and `Quality` for how a model does in use; `Versions` and `UseVersion` to roll back |
 | `client.Datasets` | `UploadCSV`, `UploadPhotos`, `UploadSounds`, `UploadBoxes`, `UploadText`, `Create` from a database query, a bucket or a template; get, refresh, check, delete |
 | `client.Training` | `Start`, `Wait` (with progress), get, list, cancel, resume, delete, `Compare` (runs side by side), `KeepLearning` (on an interval, optionally waiting for new rows) |
 | `client.Scorings` | `ScoreCSV`, `ScoreQuery` (on a schedule), `Create` from storage or a dataset; `Wait`, `Download` the results, run again, cancel, delete |
@@ -189,6 +189,29 @@ the balanced score when one answer is rare, or by the average miss for a
 number model, where less is better. `Benchmark.GetMetric()` says which, and
 `GetLowerIsBetter()` which way round. A model that finishes training on the
 benchmark's dataset is scored on its own.
+
+## Why it answered that
+
+For a model taught on a table, `Explain` gives each column's effect on one
+answer compared with a typical row, and `ExplainModel` which columns
+matter most overall:
+
+```go
+why, err := client.Models.Explain(ctx, modelID, fields, "") // "" explains the answer it gave
+fmt.Printf("chance of %s: %.0f%% (typical row %.0f%%)\n", why.GetLabel(), why.GetValue()*100, why.GetTypical()*100)
+for _, c := range why.GetContributions() {
+	fmt.Printf("  %s = %s: %+.0f points\n", c.GetColumn(), c.GetValue(), c.GetEffect()*100)
+}
+
+cols, err := client.Models.ExplainModel(ctx, modelID)
+for _, c := range cols.GetColumns() {
+	fmt.Printf("%s: %.0f%% of the effect\n", c.GetColumn(), c.GetShare()*100)
+}
+```
+
+For a model that answers with a number, `GetNumber()` is true and the
+effects are in its units. Models that rank, and models of photos, sound or
+text, are refused with `ErrInvalidArgument`.
 
 ## Feedback and versions
 
