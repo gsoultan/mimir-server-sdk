@@ -34,6 +34,7 @@ type fake struct {
 	mimirv1connect.UnimplementedApiKeyServiceHandler
 	mimirv1connect.UnimplementedBenchmarkServiceHandler
 	mimirv1connect.UnimplementedDatasetServiceHandler
+	mimirv1connect.UnimplementedScoringServiceHandler
 
 	mu      sync.Mutex
 	headers []http.Header
@@ -52,6 +53,8 @@ type fake struct {
 	quality     func(req *mimirv1.GetModelQualityRequest) (*mimirv1.GetModelQualityResponse, error)
 	feedback    func(req *mimirv1.SendFeedbackRequest) (*mimirv1.SendFeedbackResponse, error)
 	upload      http.Handler
+	getScoring  func(n int) (*mimirv1.GetScoringResponse, error)
+	results     http.Handler
 
 	calls atomic.Int32
 }
@@ -128,6 +131,15 @@ func (f *fake) GetJob(_ context.Context, req *connect.Request[mimirv1.GetJobRequ
 	return connect.NewResponse(res), nil
 }
 
+func (f *fake) GetScoring(_ context.Context, req *connect.Request[mimirv1.GetScoringRequest]) (*connect.Response[mimirv1.GetScoringResponse], error) {
+	n := f.record(req.Header())
+	res, err := f.getScoring(n)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(res), nil
+}
+
 func (f *fake) GetBenchmark(_ context.Context, req *connect.Request[mimirv1.GetBenchmarkRequest]) (*connect.Response[mimirv1.GetBenchmarkResponse], error) {
 	n := f.record(req.Header())
 	res, err := f.getBench(n)
@@ -158,6 +170,10 @@ func start(t *testing.T, f *fake, opts ...mimirsdk.Option) *mimirsdk.Client {
 	mux.Handle(mimirv1connect.NewApiKeyServiceHandler(f))
 	mux.Handle(mimirv1connect.NewBenchmarkServiceHandler(f))
 	mux.Handle(mimirv1connect.NewDatasetServiceHandler(f))
+	mux.Handle(mimirv1connect.NewScoringServiceHandler(f))
+	if f.results != nil {
+		mux.Handle("GET /api/scorings/{id}/results", f.results)
+	}
 	if f.upload != nil {
 		mux.Handle("POST /api/uploads", f.upload)
 	}

@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+Needs the next mimir-server release (the one after v0.2.0).
+
+- `client.Scorings`: answer every row of a table with one model at once,
+  from a CSV (`ScoreCSV`), a database query on a schedule (`ScoreQuery`),
+  storage or a dataset (`Create`); `Wait` follows it, `Download` streams
+  the results CSV, and `Run`, `Cancel`, `SetRepeat` and `Delete` manage
+  it. `*ScoringError` says why one failed.
+
 ## v0.1.0 (unreleased)
 
 The first release, built against mimir-server v0.2.0.
