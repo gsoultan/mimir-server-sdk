@@ -9,6 +9,10 @@ Needs the next mimir-server release (the one after v0.2.0).
   storage or a dataset (`Create`); `Wait` follows it, `Download` streams
   the results CSV, and `Run`, `Cancel`, `SetRepeat` and `Delete` manage
   it. `*ScoringError` says why one failed.
+- `client.Documents`: answer questions from your own files. Make a
+  collection, `AddFile` PDFs, Word, Markdown, web pages or text, follow
+  them with `WaitDocument`, then `Ask` (streamed, sources first) or
+  `AskText`, or `Search` for the matching passages.
 
 ## v0.1.0 (unreleased)
 
