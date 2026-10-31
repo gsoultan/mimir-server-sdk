@@ -4,12 +4,10 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
-	"connectrpc.com/connect"
 	mimirv1 "github.com/gsoultan/mimir-server/gen/mimir/v1"
 	"github.com/gsoultan/mimir-server/gen/mimir/v1/mimirv1connect"
 )
@@ -23,10 +21,8 @@ const scoringResultsPath = "/api/scorings/%s/results"
 // scores in the background and keeps the rows with each answer next to
 // them as a CSV, which Download fetches.
 type ScoringService struct {
-	raw      mimirv1connect.ScoringServiceClient
-	http     connect.HTTPClient
-	base     string
-	download *interceptor
+	raw mimirv1connect.ScoringServiceClient
+	dl  *downloader
 }
 
 // List returns every scoring the caller may see, newest first.
@@ -139,31 +135,7 @@ func (s *ScoringService) Wait(ctx context.Context, id string, opts ScoringWaitOp
 // or suggestions, and problem, which says why a row couldn't be
 // answered). It returns how many bytes it wrote.
 func (s *ScoringService) Download(ctx context.Context, id string, w io.Writer) (int64, error) {
-	u := s.base + fmt.Sprintf(scoringResultsPath, url.PathEscape(id))
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
-	if err != nil {
-		return 0, fmt.Errorf("mimirsdk: download results: %w", err)
-	}
-	s.download.setHeaders(req.Header)
-	res, err := s.http.Do(req)
-	if err != nil {
-		if ctx.Err() != nil {
-			return 0, ctx.Err()
-		}
-		return 0, fmt.Errorf("mimirsdk: download results: %w", err)
-	}
-	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		data, _ := io.ReadAll(io.LimitReader(res.Body, 1<<20))
-		e := uploadError(res.StatusCode, data).(*Error)
-		e.Procedure = strings.Replace(scoringResultsPath, "%s", id, 1)
-		return 0, e
-	}
-	n, err := io.Copy(w, res.Body)
-	if err != nil {
-		return n, fmt.Errorf("mimirsdk: download results: %w", err)
-	}
-	return n, nil
+	return s.dl.get(ctx, fmt.Sprintf(scoringResultsPath, url.PathEscape(id)), "download results", w)
 }
 
 // ScoringError is what Wait returns for a scoring that failed or was

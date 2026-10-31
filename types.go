@@ -109,6 +109,21 @@ type (
 	GetSettingsResponse        = mimirv1.GetSettingsResponse
 	Training                   = mimirv1.Training
 	UpdateTrainingRequest      = mimirv1.UpdateTrainingRequest
+	CheckDatabaseResponse      = mimirv1.CheckDatabaseResponse
+	SetupRequest               = mimirv1.SetupRequest
+	SetupResponse              = mimirv1.SetupResponse
+	StartTwoFactorResponse     = mimirv1.StartTwoFactorResponse
+	SignInKind                 = mimirv1.SignInKind
+	SignInOption               = mimirv1.SignInOption
+	SignInProvider             = mimirv1.SignInProvider
+	SignInRule                 = mimirv1.SignInRule
+	EmailAlerts                = mimirv1.EmailAlerts
+	TelegramAlerts             = mimirv1.TelegramAlerts
+	UpdateAlertsResponse       = mimirv1.UpdateAlertsResponse
+	Retention                  = mimirv1.Retention
+	Security                   = mimirv1.Security
+	TwoFactorPolicy            = mimirv1.TwoFactorPolicy
+	GetDatabaseInfoResponse    = mimirv1.GetDatabaseInfoResponse
 	CloudGpu                   = mimirv1.CloudGpu
 	CloudGpuProvider           = mimirv1.CloudGpuProvider
 	CloudGpuChoice             = mimirv1.CloudGpuChoice
@@ -162,4 +177,18 @@ const (
 	DeliveryStatusPending   = mimirv1.DeliveryStatus_DELIVERY_STATUS_PENDING
 	DeliveryStatusDelivered = mimirv1.DeliveryStatus_DELIVERY_STATUS_DELIVERED
 	DeliveryStatusFailed    = mimirv1.DeliveryStatus_DELIVERY_STATUS_FAILED
+)
+
+// SignInKind values: the kinds of outside sign-in.
+const (
+	SignInKindGoogle = mimirv1.SignInKind_SIGN_IN_KIND_GOOGLE
+	SignInKindGitHub = mimirv1.SignInKind_SIGN_IN_KIND_GITHUB
+	SignInKindOIDC   = mimirv1.SignInKind_SIGN_IN_KIND_OIDC
+)
+
+// TwoFactorPolicy values: who must use two-step verification.
+const (
+	TwoFactorOptional = mimirv1.TwoFactorPolicy_TWO_FACTOR_POLICY_OPTIONAL
+	TwoFactorAdmins   = mimirv1.TwoFactorPolicy_TWO_FACTOR_POLICY_ADMINS
+	TwoFactorEveryone = mimirv1.TwoFactorPolicy_TWO_FACTOR_POLICY_EVERYONE
 )

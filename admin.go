@@ -2,6 +2,7 @@ package mimirsdk
 
 import (
 	"context"
+	"io"
 	"iter"
 
 	mimirv1 "github.com/gsoultan/mimir-server/gen/mimir/v1"
@@ -140,6 +141,14 @@ func (s *WorkerService) StopCloudGPU(ctx context.Context) (*CloudGpu, error) {
 	return res.GetCloudGpu(), err
 }
 
+// ReplaceToken makes a new token for a worker, shown only once. The old
+// token stops working at once and the worker is disconnected until it
+// joins again with the new one.
+func (s *WorkerService) ReplaceToken(ctx context.Context, id string) (string, error) {
+	res, err := call(ctx, mimirv1connect.WorkerServiceReplaceWorkerTokenProcedure, s.raw.ReplaceWorkerToken, &mimirv1.ReplaceWorkerTokenRequest{Id: id})
+	return res.GetToken(), err
+}
+
 // Delete removes a worker.
 func (s *WorkerService) Delete(ctx context.Context, id string) error {
 	_, err := call(ctx, mimirv1connect.WorkerServiceDeleteWorkerProcedure, s.raw.DeleteWorker, &mimirv1.DeleteWorkerRequest{Id: id})
@@ -150,6 +159,7 @@ func (s *WorkerService) Delete(ctx context.Context, id string) error {
 // owner, except Usage, which shows each caller their own.
 type SettingsService struct {
 	raw mimirv1connect.SettingsServiceClient
+	dl  *downloader
 }
 
 // Get returns the alert, retention, security, limit and training settings.
@@ -161,6 +171,54 @@ func (s *SettingsService) Get(ctx context.Context) (*GetSettingsResponse, error)
 // means this month), by person and API key.
 func (s *SettingsService) Usage(ctx context.Context, month string) (*GetUsageResponse, error) {
 	return call(ctx, mimirv1connect.SettingsServiceGetUsageProcedure, s.raw.GetUsage, &mimirv1.GetUsageRequest{Month: month})
+}
+
+// UpdateAlerts changes where alerts go: email through an SMTP server,
+// Telegram, or both. A nil channel is left as it is; an empty password or
+// bot token keeps the stored one.
+func (s *SettingsService) UpdateAlerts(ctx context.Context, email *EmailAlerts, telegram *TelegramAlerts) (*UpdateAlertsResponse, error) {
+	return call(ctx, mimirv1connect.SettingsServiceUpdateAlertsProcedure, s.raw.UpdateAlerts, &mimirv1.UpdateAlertsRequest{Email: email, Telegram: telegram})
+}
+
+// Alert channels, for SendTestAlert.
+const (
+	AlertChannelEmail    = "email"
+	AlertChannelTelegram = "telegram"
+)
+
+// SendTestAlert sends "This is a test" through AlertChannelEmail or
+// AlertChannelTelegram now.
+func (s *SettingsService) SendTestAlert(ctx context.Context, channel string) error {
+	_, err := call(ctx, mimirv1connect.SettingsServiceSendTestAlertProcedure, s.raw.SendTestAlert, &mimirv1.SendTestAlertRequest{Channel: channel})
+	return err
+}
+
+// UpdateRetention changes how long the audit log and webhook delivery
+// history are kept.
+func (s *SettingsService) UpdateRetention(ctx context.Context, retention *Retention) (*Retention, error) {
+	res, err := call(ctx, mimirv1connect.SettingsServiceUpdateRetentionProcedure, s.raw.UpdateRetention, &mimirv1.UpdateRetentionRequest{Retention: retention})
+	return res.GetRetention(), err
+}
+
+// UpdateSecurity changes the security policy, such as whether everyone
+// must use two-step verification.
+func (s *SettingsService) UpdateSecurity(ctx context.Context, security *Security) (*Security, error) {
+	res, err := call(ctx, mimirv1connect.SettingsServiceUpdateSecurityProcedure, s.raw.UpdateSecurity, &mimirv1.UpdateSecurityRequest{Security: security})
+	return res.GetSecurity(), err
+}
+
+// DatabaseInfo describes the server's database: its size, schema version,
+// how many records it holds and when history was last trimmed.
+func (s *SettingsService) DatabaseInfo(ctx context.Context) (*GetDatabaseInfoResponse, error) {
+	return call(ctx, mimirv1connect.SettingsServiceGetDatabaseInfoProcedure, s.raw.GetDatabaseInfo, nil)
+}
+
+// Backup writes a pg_dump of the server's database to w, in pg_dump's
+// custom format (restore it with pg_restore), and returns how many bytes
+// it wrote. The server allows it only for an admin signed in with a
+// password, not an API key, and only where pg_dump is installed.
+func (s *SettingsService) Backup(ctx context.Context, w io.Writer) (int64, error) {
+	return s.dl.get(ctx, backupPath, "download backup", w)
 }
 
 // UpdateLimits changes the prediction and training limits.

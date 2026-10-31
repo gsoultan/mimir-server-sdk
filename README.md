@@ -58,19 +58,21 @@ the key in `$MIMIR_API_KEY`.
 
 | Service | What it does |
 | --- | --- |
-| `client.Models` | list, get, upload (`.mim`, ONNX, GGUF, streamed so files can be larger than memory), update, delete; `Predict`, `PredictFields`, `PredictPhoto`; `Explain` and `ExplainModel` for why a table model answers as it does; `Generate`, `GenerateStream`, `Chat`, `ChatText` for language models; `SendFeedback` and `Quality` for how a model does in use; `Versions` and `UseVersion` to roll back |
-| `client.Datasets` | `UploadCSV`, `UploadPhotos`, `UploadSounds`, `UploadBoxes`, `UploadText`, `Create` from a database query, a bucket or a template; get, refresh, check, delete |
+| `client.Models` | list, get, upload (`.mim`, ONNX, GGUF, streamed so files can be larger than memory), update, delete; `SaveArchitecture` and `DeleteArchitecture` for model types written in your own code; `Predict`, `PredictFields`, `PredictPhoto`; `Explain` and `ExplainModel` for why a table model answers as it does; `Generate`, `GenerateStream`, `Chat`, `ChatText` for language models; `SendFeedback` and `Quality` for how a model does in use; `Versions` and `UseVersion` to roll back |
+| `client.Datasets` | `UploadCSV`, `UploadPhotos`, `UploadSounds`, `UploadBoxes`, `UploadText`, `Create` from a database query, a bucket or a template, with `TestQuery` and `TestBucket` to look first; get, refresh, check, delete |
 | `client.Training` | `Start`, `Wait` (with progress), get, list, cancel, resume, delete, `Compare` (runs side by side), `KeepLearning` (on an interval, optionally waiting for new rows) |
 | `client.Scorings` | `ScoreCSV`, `ScoreQuery` (on a schedule), `Create` from storage or a dataset; `Wait`, `Download` the results, run again, cancel, delete |
 | `client.Documents` | Collections of your files: `AddFile`, `WaitDocument`, `Search`, `Ask` and `AskText` with the passages cited |
 | `client.Benchmarks` | `Freeze` a test from a dataset, `Create` from test rows of your own, `Score` models, `WaitForScores`, `Leader`, get the leaderboard, list, delete |
 | `client.Webhooks` | create, update, delete, `SendTest`, `Deliveries` (paged), `Redeliver` |
 | `client.APIKeys` | list, create, revoke the caller's keys |
-| `client.Auth` | `WhoAmI`, `SetupState`, `SignIn` and `VerifySecondFactor` for a password sign-in |
+| `client.Auth` | `WhoAmI`, `SignIn` and `VerifySecondFactor` for a password sign-in; `ChangePassword`; `StartTwoFactor`, `EnableTwoFactor`, `DisableTwoFactor`; `Sessions`, `RevokeSession`, `RevokeOtherSessions`; `SetupState`, `CheckDatabase` and `Setup` for first-run setup |
+| `client.SignIn` | sign-in with Google, GitHub or your own OpenID Connect provider: `Options`, `Providers`, `SaveProvider`, `DeleteProvider` |
 | `client.Users`, `client.Teams` | manage people and teams (admins and owners) |
 | `client.Audit` | `All` walks the audit log page by page |
-| `client.Workers` | list, get, choices, create, delete, `SetTasks` (train, serve or both), rented cloud GPU settings |
-| `client.Settings`, `client.Templates` | usage, limits, where training runs and other settings; the template gallery and its example data |
+| `client.Workers` | list, get, choices, create, delete, `ReplaceToken`, `SetTasks` (train, serve or both), rented cloud GPU settings |
+| `client.Settings` | usage, limits, where training runs, alerts (`UpdateAlerts`, `SendTestAlert`), retention, security (who must use two-step verification), `DatabaseInfo`, and `Backup` of the database |
+| `client.Templates` | the template gallery and its example data |
 | `webhook` package | check `Mimir-Signature` and decode events on the receiving end |
 
 Anything else the server offers is on `client.Raw()`: the generated Connect
@@ -351,6 +353,7 @@ releases. Each release names the mimir-server release it is built against:
 
 | SDK | mimir-server |
 | --- | --- |
+| v0.3.x | v0.3.1 and later 0.3 releases |
 | v0.2.x | v0.3.0 and later 0.3 releases |
 | v0.1.x | v0.1.3 |
 
