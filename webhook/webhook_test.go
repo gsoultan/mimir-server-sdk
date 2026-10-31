@@ -99,6 +99,28 @@ func TestAccuracyDropped(t *testing.T) {
 	}
 }
 
+func TestScoringEvent(t *testing.T) {
+	// The data as the server's scoringEvent builds it.
+	data := `{"id":"e4","type":"scoring.finished","time":"2026-10-30T10:00:00Z","data":{"id":"s1","name":"October customers","model_id":"m1","model":"churn","status":"succeeded","rows":1200,"done":1200,"failed":3,"error":""}}`
+	ev, err := webhook.Parse(secret, webhook.Sign(secret, time.Now(), []byte(data)), []byte(data), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ev.Type != webhook.ScoringFinished {
+		t.Errorf("type = %q", ev.Type)
+	}
+	sc, err := ev.Scoring()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if sc.ID != "s1" || sc.Model != "churn" || sc.ModelID != "m1" || sc.Rows != 1200 || sc.Failed != 3 || sc.Status != "succeeded" {
+		t.Errorf("scoring event = %+v", sc)
+	}
+	if _, err := ev.Job(); err == nil {
+		t.Error("a scoring event decoded as a training event")
+	}
+}
+
 func TestHandler(t *testing.T) {
 	var got *webhook.Event
 	fail := false

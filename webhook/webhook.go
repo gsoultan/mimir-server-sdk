@@ -52,6 +52,8 @@ const (
 	TrainingQueued   = "training.queued"
 	TrainingFinished = "training.finished"
 	TrainingFailed   = "training.failed"
+	ScoringFinished  = "scoring.finished"
+	ScoringFailed    = "scoring.failed"
 	UserCreated      = "user.created"
 	UserDeleted      = "user.deleted"
 	Test             = "test"
@@ -124,7 +126,7 @@ type Event struct {
 	ID   string    `json:"id"`
 	Type string    `json:"type"`
 	Time time.Time `json:"time"`
-	// Data depends on Type; Model, Accuracy, Job and User decode it.
+	// Data depends on Type; Model, Accuracy, Job, Scoring and User decode it.
 	Data json.RawMessage `json:"data"`
 }
 
@@ -209,6 +211,23 @@ type JobEvent struct {
 	Error    string  `json:"error"`
 }
 
+// ScoringEvent is the data of scoring.finished and scoring.failed.
+type ScoringEvent struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	ModelID string `json:"model_id"`
+	// Model is the model's name.
+	Model string `json:"model"`
+	// Status is "succeeded", "failed" or "cancelled".
+	Status string `json:"status"`
+	// Rows is how many rows the run read, Done how many it answered and
+	// Failed how many of those it couldn't.
+	Rows   int64  `json:"rows"`
+	Done   int64  `json:"done"`
+	Failed int64  `json:"failed"`
+	Error  string `json:"error"`
+}
+
 // UserEvent is the data of user.created and user.deleted.
 type UserEvent struct {
 	User struct {
@@ -251,6 +270,11 @@ func (e *Event) Model() (*ModelEvent, error) {
 // Job decodes a training event's data.
 func (e *Event) Job() (*JobEvent, error) {
 	return decode[JobEvent](e, "training.")
+}
+
+// Scoring decodes a scoring event's data.
+func (e *Event) Scoring() (*ScoringEvent, error) {
+	return decode[ScoringEvent](e, "scoring.")
 }
 
 // User decodes a user event's data.
