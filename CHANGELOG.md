@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.3.0
+
+Built against mimir-server v0.3.1. Every call the server offers to people
+and apps is now wrapped; only the worker's own `Link` stream is left to
+`Raw()`.
+
+- `client.SignIn`: sign-in with Google, GitHub or a company's own OpenID
+  Connect provider. `Options` lists the sign-in page's buttons;
+  `Providers`, `SaveProvider` and `DeleteProvider` manage them, with the
+  rules that decide which team someone new lands in. `SignInKind` and its
+  values are re-exported, and `RawClients` has the `SignIn` client.
+- `Auth.ChangePassword`, `StartTwoFactor`, `EnableTwoFactor` and
+  `DisableTwoFactor` for the signed-in person's password and two-step
+  verification; `Sessions`, `RevokeSession` and `RevokeOtherSessions` for
+  where they are signed in.
+- `Auth.CheckDatabase` and `Auth.Setup` finish first-run setup with the
+  setup token.
+- `Settings.UpdateAlerts`, `SendTestAlert`, `UpdateRetention`,
+  `UpdateSecurity` (with the `TwoFactorOptional`, `TwoFactorAdmins` and
+  `TwoFactorEveryone` policies), `DatabaseInfo`, and `Backup`, which
+  downloads a pg_dump of the database for an admin signed in with a
+  password.
+- `Datasets.TestQuery` and `TestBucket` show what a database query or a
+  bucket holds before a dataset is made from it.
+- `Models.SaveArchitecture` and `DeleteArchitecture` describe model types
+  written in your own code.
+- `Workers.ReplaceToken` gives a worker a new token.
+- The `webhook` package knows `scoring.finished` and `scoring.failed`
+  (`ScoringFinished`, `ScoringFailed`), and `Event.Scoring` decodes them.
+- `OpenAIBaseURL` mentions `/v1/embeddings`, which the server serves too.
+
 ## v0.2.0
 
 Built against mimir-server v0.3.0, and needs it for scorings, documents

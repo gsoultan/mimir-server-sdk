@@ -45,6 +45,12 @@ func main() {
 				return err
 			}
 			fmt.Printf("%s: %s %s (accuracy %.1f%%) %s\n", ev.Type, job.Name, job.Status, job.Accuracy*100, job.Error)
+		case webhook.ScoringFinished, webhook.ScoringFailed:
+			sc, err := ev.Scoring()
+			if err != nil {
+				return err
+			}
+			fmt.Printf("%s: %s with %s, %d of %d rows answered %s\n", ev.Type, sc.Name, sc.Model, sc.Done-sc.Failed, sc.Rows, sc.Error)
 		case webhook.ModelCreated, webhook.ModelUpdated, webhook.ModelDeleted:
 			m, err := ev.Model()
 			if err != nil {

@@ -90,6 +90,19 @@ func (s *ModelService) UploadFile(ctx context.Context, path, name, architecture 
 	return s.Upload(ctx, name, architecture, f)
 }
 
+// SaveArchitecture describes a model type written in someone's own code
+// and run on workers, or changes how one already saved is described.
+func (s *ModelService) SaveArchitecture(ctx context.Context, req *SaveArchitectureRequest) (*Architecture, error) {
+	res, err := call(ctx, mimirv1connect.ModelServiceSaveArchitectureProcedure, s.raw.SaveArchitecture, req)
+	return res.GetArchitecture(), err
+}
+
+// DeleteArchitecture removes a described model type that no model uses.
+func (s *ModelService) DeleteArchitecture(ctx context.Context, name string) error {
+	_, err := call(ctx, mimirv1connect.ModelServiceDeleteArchitectureProcedure, s.raw.DeleteArchitecture, &mimirv1.DeleteArchitectureRequest{Name: name})
+	return err
+}
+
 // Update renames a model, changes its description or language settings, or
 // lets it run on people's devices.
 func (s *ModelService) Update(ctx context.Context, req *UpdateModelRequest) (*Model, error) {
