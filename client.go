@@ -38,6 +38,7 @@ type Client struct {
 	Benchmarks *BenchmarkService
 	Scorings   *ScoringService
 	Documents  *DocumentService
+	SignIn     *SignInService
 }
 
 // RawClients are the generated Connect clients for every service. Use them
@@ -59,6 +60,7 @@ type RawClients struct {
 	Benchmarks mimirv1connect.BenchmarkServiceClient
 	Scorings   mimirv1connect.ScoringServiceClient
 	Documents  mimirv1connect.DocumentServiceClient
+	SignIn     mimirv1connect.SignInServiceClient
 }
 
 // New returns a client for the server at baseURL, such as
@@ -98,7 +100,9 @@ func New(baseURL string, opts ...Option) (*Client, error) {
 		Benchmarks: mimirv1connect.NewBenchmarkServiceClient(h, base, copts...),
 		Scorings:   mimirv1connect.NewScoringServiceClient(h, base, copts...),
 		Documents:  mimirv1connect.NewDocumentServiceClient(h, base, copts...),
+		SignIn:     mimirv1connect.NewSignInServiceClient(h, base, copts...),
 	}
+	dl := &downloader{http: h, base: base, ic: ic}
 	return &Client{
 		baseURL:    base,
 		raw:        raw,
@@ -112,11 +116,12 @@ func New(baseURL string, opts ...Option) (*Client, error) {
 		Training:   &TrainingService{raw: raw.Training},
 		Webhooks:   &WebhookService{raw: raw.Webhooks},
 		Workers:    &WorkerService{raw: raw.Workers},
-		Settings:   &SettingsService{raw: raw.Settings},
+		Settings:   &SettingsService{raw: raw.Settings, dl: dl},
 		Templates:  &TemplateService{raw: raw.Templates},
 		Benchmarks: &BenchmarkService{raw: raw.Benchmarks},
-		Scorings:   &ScoringService{raw: raw.Scorings, http: h, base: base, download: ic},
+		Scorings:   &ScoringService{raw: raw.Scorings, dl: dl},
 		Documents:  &DocumentService{raw: raw.Documents},
+		SignIn:     &SignInService{raw: raw.SignIn},
 	}, nil
 }
 
@@ -138,7 +143,7 @@ func NewFromEnv(opts ...Option) (*Client, error) {
 func (c *Client) BaseURL() string { return c.baseURL }
 
 // OpenAIBaseURL is where the server's OpenAI-compatible API lives
-// (/v1/chat/completions, /v1/completions, /v1/models). Point an OpenAI
+// (/v1/chat/completions, /v1/completions, /v1/embeddings, /v1/models). Point an OpenAI
 // client library at it with a mimir API key to chat with language models.
 func (c *Client) OpenAIBaseURL() string { return c.baseURL + "/v1" }
 

@@ -36,6 +36,9 @@ type fake struct {
 	mimirv1connect.UnimplementedDatasetServiceHandler
 	mimirv1connect.UnimplementedScoringServiceHandler
 	mimirv1connect.UnimplementedDocumentServiceHandler
+	mimirv1connect.UnimplementedAuthServiceHandler
+	mimirv1connect.UnimplementedSignInServiceHandler
+	mimirv1connect.UnimplementedSettingsServiceHandler
 
 	mu      sync.Mutex
 	headers []http.Header
@@ -61,7 +64,9 @@ type fake struct {
 	getDocument func(n int) (*mimirv1.GetDocumentResponse, error)
 	ask         func(req *mimirv1.AskRequest, send func(*mimirv1.AskResponse) error) error
 
-	calls atomic.Int32
+	auth   *fakeAuth
+	backup http.Handler
+	calls  atomic.Int32
 }
 
 func (f *fake) record(h http.Header) int {
@@ -190,6 +195,12 @@ func start(t *testing.T, f *fake, opts ...mimirsdk.Option) *mimirsdk.Client {
 	mux.Handle(mimirv1connect.NewDatasetServiceHandler(f))
 	mux.Handle(mimirv1connect.NewScoringServiceHandler(f))
 	mux.Handle(mimirv1connect.NewDocumentServiceHandler(f))
+	mux.Handle(mimirv1connect.NewAuthServiceHandler(f))
+	mux.Handle(mimirv1connect.NewSignInServiceHandler(f))
+	mux.Handle(mimirv1connect.NewSettingsServiceHandler(f))
+	if f.backup != nil {
+		mux.Handle("GET /api/backup", f.backup)
+	}
 	if f.results != nil {
 		mux.Handle("GET /api/scorings/{id}/results", f.results)
 	}

@@ -2,15 +2,17 @@ package mimirsdk
 
 import (
 	"context"
+	"errors"
 	"iter"
 
 	mimirv1 "github.com/gsoultan/mimir-server/gen/mimir/v1"
 	"github.com/gsoultan/mimir-server/gen/mimir/v1/mimirv1connect"
 )
 
-// AuthService says who the caller is and signs people in with a password.
-// Apps should use an API key instead (WithAPIKey); signing in needs a client
-// with a cookie jar (WithHTTPClient).
+// AuthService says who the caller is, signs people in with a password and
+// looks after their password, two-step verification and sessions. Apps
+// should use an API key (WithAPIKey) rather than signing in; signing in
+// needs a client with a cookie jar (WithHTTPClient).
 type AuthService struct {
 	raw mimirv1connect.AuthServiceClient
 }
@@ -173,4 +175,114 @@ func (s *AuditService) All(ctx context.Context, opts ListOptions) iter.Seq2[*Aud
 	return paginate(ctx, opts.PageToken, func(ctx context.Context, token string) (*Page[*AuditEvent], error) {
 		return s.ListPage(ctx, ListOptions{PageSize: opts.PageSize, PageToken: token})
 	})
+}
+
+// CheckDatabase tries a PostgreSQL URL during first-run setup, before the
+// server has a database. It needs the setup token the server printed in
+// its log, and works only until setup is done.
+func (s *AuthService) CheckDatabase(ctx context.Context, setupToken, databaseURL string) (*CheckDatabaseResponse, error) {
+	return call(ctx, mimirv1connect.AuthServiceCheckDatabaseProcedure, s.raw.CheckDatabase,
+		&mimirv1.CheckDatabaseRequest{SetupToken: setupToken, DatabaseUrl: databaseURL})
+}
+
+// Setup finishes first-run setup: it writes the configuration when
+// SetupState says NeedsConfig, then makes the first owner. It needs the
+// setup token and works only while the server has no users. When the
+// response says SignInNext, sign in once the server has restarted.
+func (s *AuthService) Setup(ctx context.Context, req *SetupRequest) (*SetupResponse, error) {
+	return call(ctx, mimirv1connect.AuthServiceSetupProcedure, s.raw.Setup, req)
+}
+
+// ChangePassword changes the signed-in person's password.
+func (s *AuthService) ChangePassword(ctx context.Context, current, next string) error {
+	_, err := call(ctx, mimirv1connect.AuthServiceChangePasswordProcedure, s.raw.ChangePassword,
+		&mimirv1.ChangePasswordRequest{CurrentPassword: current, NewPassword: next})
+	return err
+}
+
+// StartTwoFactor makes a fresh authenticator secret for the signed-in
+// person: show OtpauthUrl as a QR code, or Secret to type in. It takes
+// effect only once EnableTwoFactor confirms a code from it. code is needed
+// only when two-step verification is already on.
+func (s *AuthService) StartTwoFactor(ctx context.Context, password, code string) (*StartTwoFactorResponse, error) {
+	return call(ctx, mimirv1connect.AuthServiceStartTwoFactorProcedure, s.raw.StartTwoFactor,
+		&mimirv1.StartTwoFactorRequest{Password: password, Code: code})
+}
+
+// EnableTwoFactor turns two-step verification on with a code from the
+// secret StartTwoFactor made. It returns the recovery codes, shown only
+// this once; each works a single time.
+func (s *AuthService) EnableTwoFactor(ctx context.Context, code string) ([]string, error) {
+	res, err := call(ctx, mimirv1connect.AuthServiceEnableTwoFactorProcedure, s.raw.EnableTwoFactor,
+		&mimirv1.EnableTwoFactorRequest{Code: code})
+	return res.GetRecoveryCodes(), err
+}
+
+// DisableTwoFactor turns two-step verification off. It needs the password
+// and a current code from the authenticator app, or a recovery code.
+func (s *AuthService) DisableTwoFactor(ctx context.Context, password, code string) error {
+	_, err := call(ctx, mimirv1connect.AuthServiceDisableTwoFactorProcedure, s.raw.DisableTwoFactor,
+		&mimirv1.DisableTwoFactorRequest{Password: password, Code: code})
+	return err
+}
+
+// Sessions lists where the signed-in person is signed in; Current marks
+// this one.
+func (s *AuthService) Sessions(ctx context.Context) ([]*Session, error) {
+	res, err := call(ctx, mimirv1connect.AuthServiceListSessionsProcedure, s.raw.ListSessions, nil)
+	return res.GetSessions(), err
+}
+
+// RevokeSession signs out one session by its id.
+func (s *AuthService) RevokeSession(ctx context.Context, id string) error {
+	if id == "" {
+		return errors.New("mimirsdk: RevokeSession needs a session id; use RevokeOtherSessions to sign out everywhere else")
+	}
+	_, err := call(ctx, mimirv1connect.AuthServiceRevokeSessionsProcedure, s.raw.RevokeSessions,
+		&mimirv1.RevokeSessionsRequest{Id: id})
+	return err
+}
+
+// RevokeOtherSessions signs out every session but this one, and says how
+// many it signed out.
+func (s *AuthService) RevokeOtherSessions(ctx context.Context) (int32, error) {
+	res, err := call(ctx, mimirv1connect.AuthServiceRevokeSessionsProcedure, s.raw.RevokeSessions, nil)
+	return res.GetRevoked(), err
+}
+
+// SignInService sets up signing in with an outside account: Google,
+// GitHub, or a company's own identity provider through OpenID Connect.
+// Options may be called by anyone; the rest needs an owner.
+type SignInService struct {
+	raw mimirv1connect.SignInServiceClient
+}
+
+// Options returns the buttons the sign-in page offers next to the
+// password. Anyone may call it.
+func (s *SignInService) Options(ctx context.Context) ([]*SignInOption, error) {
+	res, err := call(ctx, mimirv1connect.SignInServiceListSignInOptionsProcedure, s.raw.ListSignInOptions, nil)
+	return res.GetOptions(), err
+}
+
+// Providers returns every sign-in provider with its settings. Client
+// secrets are never returned; ClientSecretSet says whether one is saved.
+func (s *SignInService) Providers(ctx context.Context) ([]*SignInProvider, error) {
+	res, err := call(ctx, mimirv1connect.SignInServiceListSignInProvidersProcedure, s.raw.ListSignInProviders, nil)
+	return res.GetProviders(), err
+}
+
+// SaveProvider adds a provider, or changes the one with its Id. An empty
+// ClientSecret keeps the saved one. Nobody new gets an account unless one
+// of its Rules matches them.
+func (s *SignInService) SaveProvider(ctx context.Context, p *SignInProvider) (*SignInProvider, error) {
+	res, err := call(ctx, mimirv1connect.SignInServiceSaveSignInProviderProcedure, s.raw.SaveSignInProvider,
+		&mimirv1.SaveSignInProviderRequest{Provider: p})
+	return res.GetProvider(), err
+}
+
+// DeleteProvider removes a sign-in provider.
+func (s *SignInService) DeleteProvider(ctx context.Context, id string) error {
+	_, err := call(ctx, mimirv1connect.SignInServiceDeleteSignInProviderProcedure, s.raw.DeleteSignInProvider,
+		&mimirv1.DeleteSignInProviderRequest{Id: id})
+	return err
 }

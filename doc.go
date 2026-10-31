@@ -15,9 +15,9 @@
 // them with errors.Is against ErrNotFound, ErrPermissionDenied and the other
 // sentinels, or read Code and Message.
 //
-// The services cover what apps need most. For anything else, Raw returns
-// the generated Connect clients for every service the server has, sharing
-// the same API key, retries and timeouts.
+// The services wrap every call the server offers to people and apps. Raw
+// returns the generated Connect clients behind them, sharing the same API
+// key, retries and timeouts, for anything they shape differently.
 //
 // Request and response types are the server's own (package
 // github.com/gsoultan/mimir-server/gen/mimir/v1), re-exported here under

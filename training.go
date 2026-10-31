@@ -84,6 +84,20 @@ func (s *DatasetService) UploadText(ctx context.Context, name string, r io.Reade
 	return s.Create(ctx, &mimirv1.CreateDatasetRequest{Name: name, Kind: DatasetKindText, Text: text})
 }
 
+// TestQuery runs a database query and returns its columns, a few rows and
+// how many rows it has, so the answer column can be picked before a
+// dataset is made from it.
+func (s *DatasetService) TestQuery(ctx context.Context, conn *Connection, query string) (*TestQueryResponse, error) {
+	return call(ctx, mimirv1connect.DatasetServiceTestQueryProcedure, s.raw.TestQuery, &mimirv1.TestQueryRequest{Connection: conn, Query: query})
+}
+
+// TestBucket reads a file, or a folder ending in a slash, from
+// S3-compatible storage and says what is there: how many files, and for a
+// table its columns and a few rows.
+func (s *DatasetService) TestBucket(ctx context.Context, req *TestBucketRequest) (*TestBucketResponse, error) {
+	return call(ctx, mimirv1connect.DatasetServiceTestBucketProcedure, s.raw.TestBucket, req)
+}
+
 // Refresh runs a database dataset's query again and replaces its rows.
 func (s *DatasetService) Refresh(ctx context.Context, id string) (*Dataset, error) {
 	res, err := call(ctx, mimirv1connect.DatasetServiceRefreshDatasetProcedure, s.raw.RefreshDataset, &mimirv1.RefreshDatasetRequest{Id: id})
