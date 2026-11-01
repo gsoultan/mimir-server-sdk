@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.1
+
+Built against mimir-server v0.3.2, which uses mimir v0.4.2. The server's
+API is unchanged from v0.3.1 (v0.3.2 only changes how a built model's
+forward pass runs inside the server), so no calls were added or changed.
+
 ## v0.3.0
 
 Built against mimir-server v0.3.1. Every call the server offers to people
