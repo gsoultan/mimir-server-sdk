@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Gembit Soultan Shirazi
+//
+// This file is part of mimir-server-sdk, the Go client for mimir-server,
+// created and owned by Gembit Soultan Shirazi.
+
 // Quickstart lists the models on a server and asks one a question.
 //
 //	MIMIR_URL=http://localhost:8080 MIMIR_API_KEY=mimir_... go run ./examples/quickstart

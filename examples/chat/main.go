@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Gembit Soultan Shirazi
+//
+// This file is part of mimir-server-sdk, the Go client for mimir-server,
+// created and owned by Gembit Soultan Shirazi.
+
 // Chat talks with a language model, printing its answers as they are
 // written. Upload a GGUF model in the console first.
 //

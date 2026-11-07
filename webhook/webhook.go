@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Gembit Soultan Shirazi
+//
+// This file is part of mimir-server-sdk, the Go client for mimir-server,
+// created and owned by Gembit Soultan Shirazi.
+
 // Package webhook checks and reads the events mimir-server sends to
 // webhooks.
 //

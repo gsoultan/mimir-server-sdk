@@ -1,3 +1,8 @@
+// Copyright (c) 2026 Gembit Soultan Shirazi
+//
+// This file is part of mimir-server-sdk, the Go client for mimir-server,
+// created and owned by Gembit Soultan Shirazi.
+
 // Package mimirsdk is the Go client for mimir-server: sign in with an API
 // key, then manage models, datasets, training runs, webhooks and people,
 // and ask models questions, including chats streamed as they are written.
