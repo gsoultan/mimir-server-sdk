@@ -371,5 +371,7 @@ GoReleaser.
 
 ## License
 
-Dual-licensed under the [GNU AGPL v3](LICENSE) or a commercial license. See
-[LICENSING.md](LICENSING.md) for details.
+Free for personal and noncommercial use, nonprofits, and companies with
+fewer than 100 people and under 1,000,000 USD in yearly revenue, under the
+PolyForm Noncommercial and PolyForm Small Business licenses. Other use needs
+a commercial license. See [LICENSING.md](LICENSING.md) and [LICENSE](LICENSE).
