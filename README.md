@@ -368,3 +368,10 @@ The tests run against a fake server built from the server's generated
 handlers. A release is a `v*` tag: the release workflow checks that
 `version.go` matches the tag, runs the tests and publishes the notes with
 GoReleaser.
+
+## License
+
+Free for personal and noncommercial use, nonprofits, and companies with
+fewer than 100 people and under 1,000,000 USD in yearly revenue, under the
+PolyForm Noncommercial and PolyForm Small Business licenses. Other use needs
+a commercial license. See [LICENSING.md](LICENSING.md) and [LICENSE](LICENSE).
