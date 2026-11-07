@@ -368,3 +368,8 @@ The tests run against a fake server built from the server's generated
 handlers. A release is a `v*` tag: the release workflow checks that
 `version.go` matches the tag, runs the tests and publishes the notes with
 GoReleaser.
+
+## License
+
+Dual-licensed under the [GNU AGPL v3](LICENSE) or a commercial license. See
+[LICENSING.md](LICENSING.md) for details.
