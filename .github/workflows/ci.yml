@@ -51,3 +51,69 @@ jobs:
       - run: go run honnef.co/go/tools/cmd/staticcheck@v0.8.2 ./...
       - name: govulncheck
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+
+  python:
+    name: python (${{ matrix.python }})
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.13']
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - run: uv sync --locked
+      - run: uv run ruff check
+      - run: uv run ruff format --check
+      - run: uv run mypy
+      - run: uv run pytest
+      - run: uv build
+
+  js:
+    name: js (node ${{ matrix.node }})
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: js
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  generated:
+    # The Python and TypeScript message types match the server version
+    # go.mod pins.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - uses: astral-sh/setup-uv@v6
+      - run: npm ci
+        working-directory: js
+      - run: scripts/gen.sh
+      - run: git diff --exit-code

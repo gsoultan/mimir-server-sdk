@@ -1,0 +1,45 @@
+name: release-python
+
+# Pushing a tag such as python-v0.1.0 publishes python/ to PyPI as
+# mimir-server-sdk. It uses PyPI trusted publishing: before the first
+# release, add this repository and workflow (release-python.yml, environment
+# "pypi") as a trusted publisher of the mimir-server-sdk project on PyPI.
+# The tests run first, so a broken tag publishes nothing.
+
+on:
+  push:
+    tags: ['python-v*']
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    defaults:
+      run:
+        working-directory: python
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: astral-sh/setup-uv@v6
+      - name: pyproject.toml matches the tag
+        run: |
+          want="${GITHUB_REF_NAME#python-v}"
+          got=$(sed -n 's/^version = "\(.*\)"$/\1/p' pyproject.toml)
+          code=$(sed -n 's/^__version__ = "\(.*\)"$/\1/p' src/mimirsdk/_version.py)
+          if [ "$got" != "$want" ] || [ "$code" != "$want" ]; then
+            echo "::error::pyproject.toml says $got and _version.py says $code but the tag is $GITHUB_REF_NAME"
+            exit 1
+          fi
+      - run: uv sync --locked
+      - run: uv run pytest
+      - run: uv build
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: python/dist

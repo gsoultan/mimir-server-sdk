@@ -1,0 +1,58 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mimir-server-sdk"
+version = "0.1.0"
+description = "The Python client for mimir-server."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.27,<1",
+    "protobuf>=6.31.1,<8",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://github.com/gsoultan/mimir-server-sdk"
+Source = "https://github.com/gsoultan/mimir-server-sdk/tree/main/python"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "types-protobuf>=5",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mimirsdk"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/mimirsdk", "tests", "README.md"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+extend-exclude = ["src/mimirsdk/_gen", "src/mimirsdk/types.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["UP006", "UP007", "UP035", "UP045", "B008"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src/mimirsdk"]
+exclude = ["src/mimirsdk/_gen/"]
+ignore_missing_imports = false
+
+[[tool.mypy.overrides]]
+module = ["mimirsdk._gen.*"]
+ignore_errors = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -11,6 +11,10 @@ go get github.com/gsoultan/mimir-server-sdk
 
 It needs Go 1.27 or later.
 
+Not writing Go? The same calls are in [`python/`](python) for Python and
+[`js/`](js) for JavaScript and TypeScript, generated from the same version
+of the server's API.
+
 ## Quickstart
 
 Make an API key in the console under **API keys**, then:
