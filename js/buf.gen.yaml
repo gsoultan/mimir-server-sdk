@@ -1,0 +1,9 @@
+# Used by scripts/gen.sh to write src/gen from mimir-server's protos.
+version: v2
+clean: true
+plugins:
+  - local: node_modules/.bin/protoc-gen-es
+    out: src/gen
+    opt:
+      - target=ts
+      - import_extension=js

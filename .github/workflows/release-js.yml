@@ -1,0 +1,46 @@
+name: release-js
+
+# Pushing a tag such as js-v0.1.0 publishes js/ to npm as mimir-server-sdk,
+# with provenance. Before the first release, add an npm automation token as
+# the repository secret NPM_TOKEN. The tests run first, so a broken tag
+# publishes nothing.
+
+on:
+  push:
+    tags: ['js-v*']
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    defaults:
+      run:
+        working-directory: js
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+      - name: package.json matches the tag
+        run: |
+          want="${GITHUB_REF_NAME#js-v}"
+          got=$(node -p 'require("./package.json").version')
+          code=$(sed -n 's/^export const VERSION = "\(.*\)";$/\1/p' src/version.ts)
+          if [ "$got" != "$want" ] || [ "$code" != "$want" ]; then
+            echo "::error::package.json says $got and version.ts says $code but the tag is $GITHUB_REF_NAME"
+            exit 1
+          fi
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

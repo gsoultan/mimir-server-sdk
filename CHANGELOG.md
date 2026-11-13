@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- A Python SDK in `python/` (`mimirsdk`, Python 3.10+) and a JavaScript
+  and TypeScript SDK in `js/` (`mimir-server-sdk` on npm, Node.js 20+,
+  Deno, Bun and browsers). Both cover the same calls as the Go SDK, with
+  the same retries, timeouts, typed errors, streamed chats, waits, paged
+  lists, uploads and downloads, and webhook checks. Their message types are
+  generated from mimir-server v0.3.1's protos by `scripts/gen.sh`.
+- `internal/testserver`, a stand-in server with the real Connect handlers,
+  which the Python and JavaScript tests talk to.
+
 ## v0.3.0
 
 Built against mimir-server v0.3.1. Every call the server offers to people
